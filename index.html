@@ -3,54 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nnamdi Hill — Security Engineering</title>
+<title>Nnamdi Hill — Security Engineer</title>
+<meta name="description" content="Portfolio of Nnamdi Hill, a security engineer building tools for network defense, application security, and applied cryptography.">
+<meta property="og:title" content="Nnamdi Hill — Security Engineer">
+<meta property="og:description" content="Five projects across network defense, application security, and applied cryptography.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0F14'/%3E%3Cpath d='M16 6l9 4v6c0 6.5-3.8 10.9-9 12.5C10.8 26.9 7 22.5 7 16v-6l9-4z' fill='none' stroke='%2352D9A6' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B1220;
-    --panel:#121B2E;
-    --line:#24314A;
-    --line-soft:#1A2439;
-    --text:#E4E9F2;
-    --muted:#8592AC;
-    --dim:#57647F;
-    --amber:#E8A33D;
-    --red:#D64545;
+    --bg:#0B0F14;
+    --bg-alt:#10151C;
+    --line:#1F2731;
+    --text:#EDEFF2;
+    --muted:#8A94A3;
+    --dim:#525C6B;
+    --accent:#52D9A6;
+    --accent-dim:#2E4A40;
+    --focus-ring:#52D9A6;
+    --max:52rem;
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
+
+  :root[data-theme="light"], @media (prefers-color-scheme: light){}
+
+  *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
+    margin:0;
     background:var(--bg);
     color:var(--text);
     font-family:'Space Grotesk', sans-serif;
-    line-height:1.5;
+    line-height:1.55;
     -webkit-font-smoothing:antialiased;
+    text-wrap:pretty;
   }
-  .mono{font-family:'JetBrains Mono', monospace;}
+  .mono{font-family:'JetBrains Mono', ui-monospace, monospace;}
 
+  h1,h2,h3,p,ul{margin:0;}
+  ul{padding:0; list-style:none;}
   a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
 
-  ::selection{background:var(--amber); color:var(--bg);}
+  ::selection{background:var(--accent); color:var(--bg);}
 
   @media (prefers-reduced-motion: reduce){
-    *{animation:none !important; transition:none !important;}
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
   }
 
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--focus-ring);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+
+  .skip-link{
+    position:absolute;
+    left:16px; top:-48px;
+    background:var(--accent);
+    color:var(--bg);
+    padding:10px 16px;
+    font-size:14px;
+    font-weight:600;
+    border-radius:4px;
+    z-index:100;
+    transition:top 0.15s ease;
+  }
+  .skip-link:focus{top:16px;}
+
   .wrap{
-    max-width:760px;
+    max-width:var(--max);
     margin:0 auto;
-    padding:0 28px;
+    padding:0 24px;
   }
 
   /* Header */
   header{
-    border-bottom:1px solid var(--line-soft);
     position:sticky;
     top:0;
-    background:rgba(11,18,32,0.92);
-    backdrop-filter:blur(6px);
     z-index:10;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
   }
   .header-inner{
     display:flex;
@@ -62,128 +97,108 @@
     font-family:'JetBrains Mono', monospace;
     font-size:14px;
     font-weight:500;
-    letter-spacing:0.02em;
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:9px;
   }
   .logo .dot{
     width:7px; height:7px; border-radius:50%;
-    background:var(--amber);
-    display:inline-block;
-    box-shadow:0 0 8px rgba(232,163,61,0.7);
+    background:var(--accent);
+    box-shadow:0 0 6px rgba(82,217,166,0.7);
   }
-  nav{display:flex; gap:26px;}
+  nav ul{display:flex; gap:28px;}
   nav a{
     font-size:14px;
     color:var(--muted);
     transition:color 0.15s ease;
   }
   nav a:hover{color:var(--text);}
-  nav a:focus-visible, a:focus-visible{
-    outline:2px solid var(--amber);
-    outline-offset:3px;
-  }
 
-  /* Spine layout */
-  main{
-    border-left:1px solid var(--line-soft);
-    margin-left:28px;
-  }
+  main{padding-bottom:8px;}
+
   section{
-    position:relative;
-    padding:64px 0 64px 40px;
-    border-bottom:1px solid var(--line-soft);
+    padding:72px 0;
+    border-bottom:1px solid var(--line);
   }
   section:last-of-type{border-bottom:none;}
-  section::before{
-    content:'';
-    position:absolute;
-    left:-4.5px;
-    top:70px;
-    width:8px; height:8px;
-    background:var(--bg);
-    border:1px solid var(--dim);
-    border-radius:50%;
-  }
-  @media (max-width:640px){
-    main{margin-left:14px;}
-    section{padding-left:24px;}
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    color:var(--accent);
+    margin-bottom:16px;
   }
 
   /* Hero */
-  .hero{padding-top:60px;}
-  .hero::before{display:none;}
-  .kicker{
-    font-family:'JetBrains Mono', monospace;
-    font-size:13px;
-    color:var(--amber);
-    margin-bottom:18px;
-  }
-  h1{
-    font-size:clamp(32px, 5vw, 44px);
+  .hero{padding-top:64px;}
+  .hero h1{
+    font-size:clamp(30px, 4.4vw, 42px);
     font-weight:600;
-    line-height:1.15;
-    max-width:16ch;
-    margin-bottom:22px;
+    line-height:1.2;
+    max-width:19ch;
     letter-spacing:-0.01em;
+    margin-bottom:20px;
   }
-  .hero p{
+  .hero .lede{
     color:var(--muted);
-    font-size:17px;
-    max-width:52ch;
+    font-size:16.5px;
+    max-width:54ch;
     margin-bottom:28px;
   }
-  .contact-row{
+  .hero .lede strong{color:var(--text); font-weight:500;}
+
+  .status{
+    font-size:12.5px;
+    color:var(--dim);
+    margin-bottom:26px;
+  }
+
+  .link-row{
     display:flex;
-    gap:22px;
+    gap:24px;
     flex-wrap:wrap;
   }
-  .contact-row a{
+  .link-row a{
     font-family:'JetBrains Mono', monospace;
-    font-size:14px;
+    font-size:13.5px;
     color:var(--text);
     border-bottom:1px solid var(--dim);
     padding-bottom:2px;
     transition:border-color 0.15s ease, color 0.15s ease;
   }
-  .contact-row a:hover{
-    border-color:var(--amber);
-    color:var(--amber);
-  }
+  .link-row a:hover{border-color:var(--accent); color:var(--accent);}
 
-  /* Section headings */
+  /* Section heads */
   h2{
     font-size:22px;
     font-weight:600;
-    margin-bottom:14px;
+    margin-bottom:10px;
   }
-  .section-lead{
+  .lead{
     color:var(--muted);
     max-width:56ch;
-    margin-bottom:36px;
-    font-size:15.5px;
+    font-size:15px;
+    margin-bottom:40px;
   }
 
-  /* Focus grid */
-  .focus-grid{
+  /* Focus list */
+  .focus-list{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:1px;
-    background:var(--line-soft);
-    border:1px solid var(--line-soft);
+    gap:32px 40px;
   }
-  @media (max-width:560px){
-    .focus-grid{grid-template-columns:1fr;}
+  @media (max-width:600px){
+    .focus-list{grid-template-columns:1fr;}
   }
   .focus-item{
-    background:var(--bg);
-    padding:22px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
   }
   .focus-item .f-label{
     font-family:'JetBrains Mono', monospace;
     font-size:12.5px;
-    color:var(--amber);
+    color:var(--accent);
     display:block;
     margin-bottom:8px;
   }
@@ -192,30 +207,68 @@
     font-size:14.5px;
   }
 
-  /* Project entries */
-  .project{
-    padding:28px 0;
-    border-top:1px solid var(--line-soft);
+  /* Experience */
+  .job{
+    padding:24px 0;
+    border-top:1px solid var(--line);
+    display:grid;
+    grid-template-columns:160px 1fr;
+    gap:24px;
   }
-  .project:first-child{border-top:none; padding-top:0;}
-  .project-meta{
+  .job:first-child{border-top:none; padding-top:0;}
+  @media (max-width:640px){
+    .job{grid-template-columns:1fr; gap:8px;}
+  }
+  .job-meta{
     font-family:'JetBrains Mono', monospace;
-    font-size:12.5px;
+    font-size:12px;
     color:var(--dim);
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
+    line-height:1.7;
+  }
+  .job h3{
+    font-size:16px;
+    font-weight:600;
+    margin-bottom:2px;
+  }
+  .job .org{
+    font-size:13.5px;
+    color:var(--accent);
+    display:block;
     margin-bottom:10px;
   }
-  .project-meta .lang{color:var(--muted);}
+  .job p{
+    color:var(--muted);
+    font-size:14.5px;
+    max-width:58ch;
+  }
+
+  /* Projects */
+  .project{
+    padding:32px 0;
+    border-top:1px solid var(--line);
+    display:grid;
+    grid-template-columns:160px 1fr;
+    gap:24px;
+  }
+  .project:first-child{border-top:none; padding-top:0;}
+  @media (max-width:640px){
+    .project{grid-template-columns:1fr; gap:10px;}
+  }
+  .project-meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--dim);
+    line-height:1.7;
+  }
+  .project-meta .lang{display:block; color:var(--muted);}
   .project h3{
-    font-size:19px;
+    font-size:18px;
     font-weight:600;
     margin-bottom:10px;
   }
   .project p{
     color:var(--muted);
-    font-size:15px;
+    font-size:14.5px;
     max-width:58ch;
     margin-bottom:14px;
   }
@@ -227,104 +280,147 @@
   }
   .tag{
     font-family:'JetBrains Mono', monospace;
-    font-size:11.5px;
+    font-size:11px;
     color:var(--muted);
     border:1px solid var(--line);
     padding:3px 8px;
     border-radius:3px;
   }
-  .tag.flag{
-    color:var(--red);
-    border-color:rgba(214,69,69,0.4);
-  }
   .project-link{
     font-family:'JetBrains Mono', monospace;
-    font-size:13.5px;
+    font-size:13px;
     color:var(--text);
     display:inline-flex;
     align-items:center;
     gap:6px;
     border-bottom:1px solid var(--dim);
     padding-bottom:2px;
-    transition:border-color 0.15s ease, color 0.15s ease;
+    transition:border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
   }
   .project-link:hover{
-    color:var(--amber);
-    border-color:var(--amber);
+    color:var(--accent);
+    border-color:var(--accent);
+    transform:translateX(2px);
   }
 
-  /* Footer / contact */
-  .contact-section h2{margin-bottom:12px;}
-  .contact-links{
-    display:flex;
-    flex-direction:column;
-    gap:16px;
-    margin-top:28px;
-  }
-  .contact-links a{
+  /* Contact */
+  .contact-list a{
     display:flex;
     align-items:baseline;
-    gap:14px;
+    gap:16px;
     font-size:16px;
-    padding:14px 0;
-    border-top:1px solid var(--line-soft);
+    padding:16px 0;
+    border-top:1px solid var(--line);
     transition:padding-left 0.15s ease, color 0.15s ease;
   }
-  .contact-links a:last-child{border-bottom:1px solid var(--line-soft);}
-  .contact-links a:hover{
-    padding-left:8px;
-    color:var(--amber);
-  }
-  .contact-links .c-label{
+  .contact-list a:last-child{border-bottom:1px solid var(--line);}
+  .contact-list a:hover{padding-left:8px; color:var(--accent);}
+  .contact-list .c-label{
     font-family:'JetBrains Mono', monospace;
     font-size:12.5px;
     color:var(--dim);
-    width:90px;
+    width:88px;
     flex-shrink:0;
   }
-  .contact-links a:hover .c-label{color:var(--amber);}
+  .contact-list a:hover .c-label{color:var(--accent);}
+
+  /* Background graphic */
+  .bg-graphic{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    pointer-events:none;
+  }
+  .bg-graphic svg{width:100%; height:100%; display:block;}
 
   footer{
-    padding:32px 28px 48px;
-    text-align:left;
+    padding:28px 0 48px;
+  }
+  footer .wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
     color:var(--dim);
     font-family:'JetBrains Mono', monospace;
-    font-size:12.5px;
-    max-width:760px;
-    margin:0 auto;
+    font-size:12px;
   }
 </style>
 </head>
 <body>
 
+<div class="bg-graphic" aria-hidden="true">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="dotgrid" width="44" height="44" patternUnits="userSpaceOnUse">
+        <circle cx="1" cy="1" r="1" fill="var(--line)" opacity="0.7"/>
+      </pattern>
+      <filter id="nodeGlow" x="-200%" y="-200%" width="500%" height="500%">
+        <feGaussianBlur stdDeviation="3.5" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+
+    <rect width="1440" height="900" fill="url(#dotgrid)" opacity="0.5"/>
+
+    <g fill="none" stroke="var(--line)" stroke-width="1.25" opacity="0.55">
+      <polyline points="90,70 90,210 230,210 230,360 380,360"/>
+      <polyline points="1350,50 1350,170 1210,170 1210,320 1060,320 1060,470"/>
+      <polyline points="60,600 210,600 210,740 360,740 360,860"/>
+      <polyline points="1380,690 1380,540 1250,540 1250,410"/>
+      <polyline points="700,40 700,140 820,140"/>
+      <polyline points="640,860 640,760 520,760 520,650"/>
+    </g>
+
+    <g fill="var(--accent)" opacity="0.55" filter="url(#nodeGlow)">
+      <circle cx="380" cy="360" r="2.5"/>
+      <circle cx="1060" cy="470" r="2.5"/>
+      <circle cx="360" cy="860" r="2.5"/>
+      <circle cx="1250" cy="410" r="2.5"/>
+      <circle cx="820" cy="140" r="2"/>
+      <circle cx="520" cy="650" r="2"/>
+    </g>
+  </svg>
+</div>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
 <header>
   <div class="wrap header-inner">
-    <div class="logo"><span class="dot"></span>Nnamdi Hill</div>
-    <nav>
-      <a href="#work">Work</a>
-      <a href="#focus">Focus</a>
-      <a href="#contact">Contact</a>
+    <div class="logo"><span class="dot" aria-hidden="true"></span>Nnamdi Hill</div>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="#focus">Focus</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
     </nav>
   </div>
 </header>
 
 <div class="wrap">
-<main>
+<main id="main">
 
   <section class="hero">
-    <div class="kicker mono">Security engineering</div>
+    <div class="eyebrow mono">Security engineering</div>
     <h1>I build tools that watch networks, guard applications, and keep messages private.</h1>
-    <p>Five projects, five different layers of the stack — from packet capture up through application-layer defense and end-to-end encryption. Below is what each one does and why it's built that way.</p>
-    <div class="contact-row">
+    <p class="lede">Five projects spanning the stack, from raw packet capture up through application-layer defense and end-to-end encryption — each one a working implementation, not a writeup.</p>
+    <p class="status mono">CS @ Penn State, class of 2028 — currently Cyber–IT Intern at SYNK</p>
+    <div class="link-row">
       <a href="https://github.com/Nnamdihill20" target="_blank" rel="noopener">github.com/Nnamdihill20</a>
-      <a href="https://www.linkedin.com/in/Nnamdi-hill/" target="_blank" rel="noopener">linkedin.com/in/Nnamdi-hill</a>
+      <a href="https://www.linkedin.com/in/nnamdi-hill-45655624a" target="_blank" rel="noopener">linkedin.com/in/nnamdi-hill</a>
     </div>
   </section>
 
   <section id="focus">
     <h2>What I focus on</h2>
-    <p class="section-lead">Each project below maps to one of these areas — I try to pair the concept with a working implementation rather than leaving it as theory.</p>
-    <div class="focus-grid">
+    <p class="lead">Four areas, each backed by at least one shipped project below.</p>
+    <div class="focus-list">
       <div class="focus-item">
         <span class="f-label mono">Network defense</span>
         <p>Capturing and classifying live traffic, spotting suspicious hosts, exporting evidence for further analysis.</p>
@@ -344,98 +440,142 @@
     </div>
   </section>
 
+  <section id="experience">
+    <h2>Experience</h2>
+    <p class="lead">Two roles so far, both hands-on with real tickets and real alerts.</p>
+
+    <article class="job">
+      <div class="job-meta">
+        <span>Jan 2026 – May 2026</span>
+        <span>Remote, PA</span>
+      </div>
+      <div>
+        <h3>Cyber–IT Intern</h3>
+        <span class="org mono">SYNK</span>
+        <p>Monitored and triaged roughly 35 SIEM alerts a week in Splunk and CrowdStrike, resolving about 30 directly and escalating confirmed incidents to senior analysts. Documented findings and tracked remediation through ServiceNow, and supported day-to-day security operations — patch verification, firewall and endpoint log review, user support.</p>
+      </div>
+    </article>
+
+    <article class="job">
+      <div class="job-meta">
+        <span>Aug 2023 – Dec 2023</span>
+        <span>Abington, PA</span>
+      </div>
+      <div>
+        <h3>IT Help Desk</h3>
+        <span class="org mono">Penn State University</span>
+        <p>Resolved 40+ tickets over a semester on a 10-hour-a-week schedule, troubleshooting hardware, software, and login issues, and managing each ticket's lifecycle from intake to resolution.</p>
+      </div>
+    </article>
+
+  </section>
+
   <section id="work">
     <h2>Selected work</h2>
-    <p class="section-lead">All five are open source. Dates below are when each repo was started.</p>
+    <p class="lead">All five are open source. Dates are when each repo was started.</p>
 
-    <div class="project">
+    <article class="project">
       <div class="project-meta">
         <span class="lang">TypeScript / React</span>
         <span>Jan 2026</span>
       </div>
-      <h3>Honeypot Attack Monitor</h3>
-      <p>A real-time dashboard for visualizing attacks captured by a honeypot. It classifies incoming traffic against ten attack patterns — brute force, SQL injection, port scanning, command injection, and others — across eight commonly-targeted services (SSH, Telnet, RDP, SMB, and more), then charts the results as a live feed, a timeline, a port-distribution view, and a geographic breakdown of attack origins.</p>
-      <div class="tags">
-        <span class="tag flag">attack detection</span>
-        <span class="tag">data visualization</span>
-        <span class="tag">Recharts</span>
+      <div>
+        <h3>Honeypot Attack Monitor</h3>
+        <p>A real-time dashboard for visualizing attacks captured by a honeypot. Classifies incoming traffic against ten attack patterns — brute force, SQL injection, port scanning, command injection, and others — across eight commonly-targeted services, then charts the results as a live feed, a timeline, a port-distribution view, and a geographic breakdown of attack origins.</p>
+        <div class="tags">
+          <span class="tag">attack detection</span>
+          <span class="tag">data visualization</span>
+          <span class="tag">Recharts</span>
+        </div>
+        <a class="project-link" href="https://github.com/Nnamdihill20/Honeypot-Attack-Monitor" target="_blank" rel="noopener">View repository →</a>
       </div>
-      <a class="project-link" href="https://github.com/Nnamdihill20/Honeypot-Attack-Monitor" target="_blank" rel="noopener">View repository →</a>
-    </div>
+    </article>
 
-    <div class="project">
+    <article class="project">
       <div class="project-meta">
         <span class="lang">TypeScript / React</span>
         <span>Jan 2026</span>
       </div>
-      <h3>Secure Messaging App</h3>
-      <p>A working demonstration of end-to-end encrypted messaging: ECDH (P-256) key exchange so two parties derive a shared secret without ever transmitting it, HKDF for per-message key derivation, and AES-256-GCM for authenticated encryption. Each message advances a ratchet counter, so a single compromised key can't be used to decrypt earlier messages — the same forward-secrecy principle behind protocols like Signal's.</p>
-      <div class="tags">
-        <span class="tag">ECDH</span>
-        <span class="tag">AES-256-GCM</span>
-        <span class="tag">forward secrecy</span>
+      <div>
+        <h3>Secure Messaging App</h3>
+        <p>A working demonstration of end-to-end encrypted messaging: ECDH (P-256) key exchange so two parties derive a shared secret without transmitting it, HKDF for per-message key derivation, and AES-256-GCM for authenticated encryption. Each message advances a ratchet counter, so a single compromised key can't decrypt earlier messages — the same forward-secrecy principle behind Signal.</p>
+        <div class="tags">
+          <span class="tag">ECDH</span>
+          <span class="tag">AES-256-GCM</span>
+          <span class="tag">forward secrecy</span>
+        </div>
+        <a class="project-link" href="https://github.com/Nnamdihill20/Secure-Messaging-App" target="_blank" rel="noopener">View repository →</a>
       </div>
-      <a class="project-link" href="https://github.com/Nnamdihill20/Secure-Messaging-App" target="_blank" rel="noopener">View repository →</a>
-    </div>
+    </article>
 
-    <div class="project">
+    <article class="project">
       <div class="project-meta">
         <span class="lang">Python / Flask</span>
         <span>Sep 2025</span>
       </div>
-      <h3>Web Application Firewall (Lite)</h3>
-      <p>A lightweight WAF that sits in front of a backend and inspects every incoming request for SQL injection, cross-site scripting, and path traversal patterns before deciding whether to block or forward it. Every request — allowed or blocked — is logged with a clear reason, so the filtering decisions stay auditable rather than opaque.</p>
-      <div class="tags">
-        <span class="tag flag">request filtering</span>
-        <span class="tag">regex-based detection</span>
-        <span class="tag">Flask</span>
+      <div>
+        <h3>Web Application Firewall (Lite)</h3>
+        <p>A lightweight WAF that sits in front of a backend and inspects every incoming request for SQL injection, cross-site scripting, and path traversal before deciding whether to block or forward it. Every request — allowed or blocked — is logged with a clear reason, so filtering decisions stay auditable rather than opaque.</p>
+        <div class="tags">
+          <span class="tag">request filtering</span>
+          <span class="tag">regex-based detection</span>
+          <span class="tag">Flask</span>
+        </div>
+        <a class="project-link" href="https://github.com/Nnamdihill20/Web-Application-Firewall-lite" target="_blank" rel="noopener">View repository →</a>
       </div>
-      <a class="project-link" href="https://github.com/Nnamdihill20/Web-Application-Firewall-lite" target="_blank" rel="noopener">View repository →</a>
-    </div>
+    </article>
 
-    <div class="project">
+    <article class="project">
       <div class="project-meta">
         <span class="lang">Python</span>
         <span>Sep 2025</span>
       </div>
-      <h3>Password Manager</h3>
-      <p>A command-line password manager that derives its encryption key from a single master password using PBKDF2-HMAC (SHA-256), then encrypts every stored credential with Fernet symmetric encryption. Nothing is stored in plaintext — the master password never touches disk, only the key it derives.</p>
-      <div class="tags">
-        <span class="tag">PBKDF2-HMAC</span>
-        <span class="tag">Fernet encryption</span>
-        <span class="tag">CLI</span>
+      <div>
+        <h3>Password Manager</h3>
+        <p>A command-line password manager that derives its encryption key from a single master password using PBKDF2-HMAC (SHA-256), then encrypts every stored credential with Fernet symmetric encryption. Nothing is stored in plaintext — the master password never touches disk, only the key it derives.</p>
+        <div class="tags">
+          <span class="tag">PBKDF2-HMAC</span>
+          <span class="tag">Fernet encryption</span>
+          <span class="tag">CLI</span>
+        </div>
+        <a class="project-link" href="https://github.com/Nnamdihill20/Password-Manager" target="_blank" rel="noopener">View repository →</a>
       </div>
-      <a class="project-link" href="https://github.com/Nnamdihill20/Password-Manager" target="_blank" rel="noopener">View repository →</a>
-    </div>
+    </article>
 
-    <div class="project">
+    <article class="project">
       <div class="project-meta">
         <span class="lang">Python / Scapy</span>
         <span>Sep 2025</span>
       </div>
-      <h3>Network Sniffer Tool</h3>
-      <p>A live packet sniffer built on Scapy that captures traffic off a network interface, filters it by protocol (ICMP, DNS, HTTP, TCP, UDP), and checks source addresses against a blacklist to flag suspicious IPs. Captures export to standard PCAP files, so anything caught here can be handed straight to Wireshark for deeper analysis.</p>
-      <div class="tags">
-        <span class="tag">packet capture</span>
-        <span class="tag">Scapy</span>
-        <span class="tag">PCAP export</span>
+      <div>
+        <h3>Network Sniffer Tool</h3>
+        <p>A live packet sniffer built on Scapy that captures traffic off a network interface, filters it by protocol (ICMP, DNS, HTTP, TCP, UDP), and checks source addresses against a blacklist to flag suspicious IPs. Captures export to standard PCAP files, so anything caught here can be handed straight to Wireshark for deeper analysis.</p>
+        <div class="tags">
+          <span class="tag">packet capture</span>
+          <span class="tag">Scapy</span>
+          <span class="tag">PCAP export</span>
+        </div>
+        <a class="project-link" href="https://github.com/Nnamdihill20/network-sniffer-tool" target="_blank" rel="noopener">View repository →</a>
       </div>
-      <a class="project-link" href="https://github.com/Nnamdihill20/network-sniffer-tool" target="_blank" rel="noopener">View repository →</a>
-    </div>
+    </article>
 
   </section>
 
-  <section id="contact" class="contact-section">
+  <section id="contact">
     <h2>Get in touch</h2>
-    <p class="section-lead">The full source for everything above is on GitHub. Feel free to connect on LinkedIn.</p>
-    <div class="contact-links">
+    <p class="lead">Full source for everything above is on GitHub. Feel free to connect on LinkedIn or send an email.</p>
+    <div class="contact-list">
+      <a href="mailto:Nyh5146@psu.edu">
+        <span class="c-label mono">Email</span>
+        <span>Nyh5146@psu.edu</span>
+      </a>
       <a href="https://github.com/Nnamdihill20" target="_blank" rel="noopener">
         <span class="c-label mono">GitHub</span>
         <span>github.com/Nnamdihill20</span>
       </a>
-      <a href="https://www.linkedin.com/in/Nnamdi-hill/" target="_blank" rel="noopener">
+      <a href="https://www.linkedin.com/in/nnamdi-hill-45655624a" target="_blank" rel="noopener">
         <span class="c-label mono">LinkedIn</span>
-        <span>linkedin.com/in/Nnamdi-hill</span>
+        <span>linkedin.com/in/nnamdi-hill</span>
       </a>
     </div>
   </section>
@@ -443,7 +583,12 @@
 </main>
 </div>
 
-<footer>© Nnamdi Hill — built with a spine, not a card grid.</footer>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Nnamdi Hill</span>
+    <span>Built with vanilla HTML &amp; CSS</span>
+  </div>
+</footer>
 
 </body>
 </html>
