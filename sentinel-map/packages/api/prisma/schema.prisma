@@ -1,0 +1,139 @@
+// Sentinel Map data model.
+//
+// Deliberate constraint (see /docs/LEGAL.md): no model in this schema may
+// carry a field that identifies a specific individual. Every model here
+// describes a place (AlprCamera, Facility) or an anonymous, decaying event
+// (ActivityReport) - never a person.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---- Layer A: ALPR cameras ------------------------------------------------
+
+enum AlprVendor {
+  FLOCK
+  MOTOROLA_VIGILANT
+  GENETEC
+  REKOR
+  NEOLOGY
+  ELSAG
+  JENOPTIK
+  COBAN
+  OTHER
+  UNKNOWN
+}
+
+enum MountType {
+  FIXED_POLE
+  MOBILE_PATROL
+  TRAILER
+  TOLL_GANTRY
+  BUSINESS_OWNED
+}
+
+enum OwnerType {
+  POLICE_DEPT
+  HOA
+  PRIVATE_BUSINESS
+  TOLL_AUTHORITY
+  UNKNOWN
+}
+
+enum Confidence {
+  VERIFIED
+  COMMUNITY_REPORTED
+  UNVERIFIED
+}
+
+model AlprCamera {
+  id                  String     @id @default(uuid())
+  latitude            Float
+  longitude           Float
+  vendor              AlprVendor @default(UNKNOWN)
+  mountType           MountType?
+  ownerType           OwnerType?
+  ownerName           String?
+  networkAffiliation  String? // e.g. which data-sharing network this feeds
+  source              String // e.g. "deflock", "eff_atlas", "community_submission"
+  sourceDataset       String?
+  confidence          Confidence @default(UNVERIFIED)
+  evidencePhotoUrl    String?
+  notes               String?
+  firstReportedAt     DateTime   @default(now())
+  lastVerifiedAt      DateTime?
+
+  @@index([latitude, longitude])
+}
+
+// ---- Layer C: Enforcement / government facilities -------------------------
+
+enum FacilityType {
+  POLICE_STATION
+  SHERIFF_OFFICE
+  ICE_FIELD_OFFICE
+  ICE_DETENTION_FACILITY
+  CBP_OFFICE
+  IMMIGRATION_COURT
+  COURTHOUSE
+  DHS_OFFICE
+  NATIONAL_GUARD_ARMORY
+}
+
+enum Jurisdiction {
+  FEDERAL
+  STATE
+  COUNTY
+  MUNICIPAL
+}
+
+model Facility {
+  id             String       @id @default(uuid())
+  latitude       Float
+  longitude      Float
+  name           String
+  type           FacilityType
+  jurisdiction   Jurisdiction
+  address        String?
+  phone          String?
+  source         String // e.g. "ice_gov_locator", "eoir_court_locator", "osm"
+  operatingHours String?
+  notes          String?
+  lastVerifiedAt DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([latitude, longitude])
+  @@index([type])
+}
+
+// ---- Layer B: Anonymous, decaying activity reports -------------------------
+
+enum ActivityType {
+  CHECKPOINT
+  PATROL_PRESENCE
+  RAID_REPORTED
+  OTHER
+}
+
+model ActivityReport {
+  id             String       @id @default(uuid())
+  latitude       Float
+  longitude      Float
+  activityType   ActivityType
+  description    String?
+  corroborations Int          @default(1)
+  // Salted hash of IP+UA - used only for rate limiting & duplicate
+  // corroboration detection. Never the raw IP. See src/lib/geo.ts.
+  reporterHash   String
+  flaggedCount   Int          @default(0)
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+
+  @@index([latitude, longitude])
+  @@index([expiresAt])
+}
