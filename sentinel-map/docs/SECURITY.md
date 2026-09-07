@@ -80,12 +80,15 @@ architecture.
     `NODE_ENV=production`, using `req.secure` (which respects
     `X-Forwarded-Proto` since `trust proxy` is set) - a no-op in local dev,
     and safe behind a load balancer that already terminates TLS.
-20. **Scan dependencies.** Ran `npm audit` on both packages, fixed what had
-    a safe fix (see below), and added a CI job
+20. **Scan dependencies.** Ran `npm audit` on both packages (see below for
+    what's fixed vs. accepted-and-documented) and added a CI job
     (`.github/workflows/dependency-audit.yml`) that runs `npm audit
     --audit-level=high` on both packages on every PR touching a
     `package.json` here, plus weekly on a schedule so a newly-disclosed
-    advisory against an untouched dependency still surfaces.
+    advisory against an untouched dependency still surfaces. `web`'s one
+    known finding is marked `continue-on-error` in that workflow so it
+    doesn't permanently block merges - see the comment there and the
+    finding below before assuming a red run is new.
 
 ## Rate limiting (item 11, generalized)
 
@@ -148,16 +151,26 @@ when `NODE_ENV=production` (`src/lib/adminAuth.ts#getJwtSecret`).
   and stripping EXIF (GPS in particular - see `docs/MODERATION.md`) before
   anything touches disk or a bucket.
 
-## Dependency findings from this pass
+## Dependency findings
 
-- **`esbuild`/`vite`, moderate+high - fixed.** Was dev-server-only (let a
-  malicious website make requests to `vite dev`'s local server and read the
-  response), but a safe fix existed: `npm audit fix --force` upgraded
-  `vite` 5 -> 8. Verified the upgrade didn't break anything before keeping
-  it - typecheck, `vite build`, and a full live run (real API + real
-  browser exercising every layer, the resources panel, and report
-  submission) all passed unchanged after the bump. `packages/web` is at
-  0 known vulnerabilities now.
+- **`esbuild`/`vite`, moderate+high - mitigated, not fixed (reverted an
+  earlier attempt to fix it).** Dev-server-only: it lets a malicious
+  website make requests to `vite dev`'s local server and read the
+  response, which only matters while that dev server is running and
+  reachable - it doesn't affect a production `vite build` output. An
+  earlier pass ran `npm audit fix --force` (vite 5 -> 8) and called it
+  fixed after typecheck/build/a live run all passed - but that
+  verification only ran against an install that `--force` had already
+  pushed past a real peer-dependency conflict (`@vitejs/plugin-react`
+  caps its peer range at `vite ^7`, not `^8`), so a genuine `npm install`
+  elsewhere (no force, no stale `node_modules`) failed outright with
+  `ERESOLVE`. Reverted to `vite ^5.4.1`, confirmed with an actual clean
+  install (`node_modules` and `package-lock.json` deleted first, not just
+  re-run) that it installs, typechecks, and builds with no peer conflicts.
+  Revisit once `@vitejs/plugin-react` (or its `-oxc` successor) ships
+  stable Vite 8 support - don't force this upgrade again until then, and
+  when verifying any future dependency bump, confirm it with a genuinely
+  clean install, not a rerun of an environment `--force` already touched.
 - **`qs` (via `body-parser`/`express`), moderate - mitigated, not fixed.**
   No fix exists yet for the Express 4.x line - only Express 5, which is a
   breaking migration (different error-handling middleware signature,
