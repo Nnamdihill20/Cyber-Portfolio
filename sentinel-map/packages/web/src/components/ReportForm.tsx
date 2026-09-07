@@ -3,7 +3,7 @@ import { useState } from "react";
 interface Props {
   lat: number;
   lon: number;
-  onSubmit: (activityType: string, description: string, honeypot: string) => void;
+  onSubmit: (activityType: string, description: string, honeypot: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -22,6 +22,20 @@ export function ReportForm({ lat, lon, onSubmit, onCancel }: Props) {
   // fills every field it finds will populate this. See lib/validation.ts
   // and routes/reports.ts on the API side for how a filled value is handled.
   const [honeypot, setHoneypot] = useState("");
+  // Without this, a fast double-click (or a slow connection) can fire a
+  // second request before the first one's response closes this form - two
+  // near-identical reports instead of one. On success the parent unmounts
+  // this component anyway; on failure this resets so the user can retry.
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await onSubmit(activityType, description, honeypot);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="report-form-backdrop">
@@ -51,6 +65,7 @@ export function ReportForm({ lat, lon, onSubmit, onCancel }: Props) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="e.g. 'several vehicles parked near the intersection'"
           />
+          <span className="char-count">{description.length}/280</span>
         </label>
 
         <label className="hp-field" aria-hidden="true">
@@ -66,12 +81,11 @@ export function ReportForm({ lat, lon, onSubmit, onCancel }: Props) {
         </label>
 
         <div className="report-form-actions">
-          <button onClick={onCancel}>Cancel</button>
-          <button
-            className="primary"
-            onClick={() => onSubmit(activityType, description, honeypot)}
-          >
-            Submit
+          <button onClick={onCancel} disabled={submitting}>
+            Cancel
+          </button>
+          <button className="primary" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>

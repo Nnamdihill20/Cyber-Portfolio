@@ -2,15 +2,27 @@
 
 ## Layer A — ALPR cameras
 
+**Preferred: `packages/api/seed/import-alpr-from-osm.ts <minLat> <minLon> <maxLat> <maxLon>`.**
+DeFlock doesn't host its own database - every camera on its map is an
+OpenStreetMap node/way tagged `man_made=surveillance` +
+`surveillance:type=ALPR` (per the [OSM wiki](https://wiki.openstreetmap.org/wiki/Tag:surveillance:type=ALPR)),
+queried live via Overpass, same as DeFlock's own site. As of early 2026
+that registry passed 336,000 tagged cameras worldwide across every major
+vendor. Querying Overpass directly - the same mechanism
+`import-osm-police.ts` already uses for police stations - gets you current
+data for any bounding box, live, instead of a CSV snapshot that goes stale
+the moment OSM contributors add or correct an entry.
+
 | Source | Coverage | Access |
 |---|---|---|
-| [DeFlock](https://deflock.me) | Community-mapped, multi-vendor ALPR, largest open dataset | Public map + downloadable OSM-tagged data (`man_made=surveillance`, `surveillance:type=ALPR`) |
-| [EFF Atlas of Surveillance](https://atlasofsurveillance.org) | Multi-vendor, includes procurement-record-sourced entries | Public dataset, CSV export available |
+| OpenStreetMap ALPR tags via [Overpass API](https://overpass-api.de) | Multi-vendor, 336k+ tagged cameras worldwide (this is DeFlock's actual backing data) | Free API, no key required - see script above |
+| [EFF Atlas of Surveillance](https://atlasofsurveillance.org) | Multi-vendor, includes procurement-record-sourced entries not always on OSM | Public dataset, CSV export available |
 | Municipal council minutes / procurement records | Flock, Motorola/Vigilant, Genetec contracts | FOIA / public-records requests per city |
 
-Import with `packages/api/seed/import-alpr-cameras-csv.ts` after exporting
-either source to CSV matching the columns documented in that script's header
-comment.
+The EFF dataset and FOIA records still have value on top of OSM (some
+procurement-sourced entries aren't independently mapped on OSM) - import
+those via `packages/api/seed/import-alpr-cameras-csv.ts` after exporting to
+CSV matching the columns documented in that script's header comment.
 
 ## Layer C — Facilities
 

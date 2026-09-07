@@ -17,20 +17,27 @@ why that line is drawn and kept.
 | **C — Facilities** | Police/sheriff stations, ICE field offices, detention facilities, immigration courts, CBP offices | Bulk import from public government directories (ICE locator, EOIR, TRAC, OSM) |
 
 See [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) for exact sourcing per
-layer, [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design, and
+layer, [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design,
 [`docs/SECURITY.md`](docs/SECURITY.md) for the application security posture
 (what's hardened, what's mitigated, and what's intentionally not built
-given this app has no accounts or sessions).
+given this app has no accounts or sessions), and
+[`docs/SITE_POLISH.md`](docs/SITE_POLISH.md) for the pre-launch checklist
+(privacy/terms pages, SEO basics, mobile responsiveness, and what was
+deliberately left out - cookie consent and analytics - and why).
 
 The map centers on the visitor's real location via browser geolocation
-(falls back to a fixed default if denied/unavailable), and the search
-radius auto-follows whatever's currently visible on screen — pan or zoom
-and it refetches to match, rather than a fixed radius that can disagree
-with what's on screen. A **satellite/street toggle** (bottom-right on the
-map) switches basemaps without losing any of the plotted pins. Zero
-counts for cameras/facilities in your area almost always means no data has
-been imported there yet (see `docs/DATA_SOURCES.md`), not a bug — the
-sample CSVs are placeholders, not real coverage.
+(falls back to a fixed default if denied/unavailable). The search radius
+defaults to (and resets to, on every pan/zoom) whatever's currently
+visible on screen, so it can't quietly disagree with what's on the map -
+narrow it further with the sidebar slider if a busy area gets cluttered.
+A **satellite/street toggle** (bottom-right on the map) switches basemaps
+without losing any of the plotted pins. Zero counts for cameras/facilities
+in your area almost always means no data has been imported there yet (see
+`docs/DATA_SOURCES.md`), not a bug — the sample CSVs are placeholders, not
+real coverage. For ALPR cameras specifically, prefer
+`npm run seed:cameras:osm <minLat> <minLon> <maxLat> <maxLon>` in
+`packages/api` over the sample CSV - it pulls real, current camera data
+straight from OpenStreetMap (DeFlock's own data source) for any area, live.
 
 Alongside the map: a **know-your-rights** panel (state + language selector)
 and a **legal aid directory** (nearest-first, plus statewide/national
@@ -84,9 +91,14 @@ Spanish federal-level entry seeded), a legal-aid directory, and a
 login-gated `/admin` dashboard for reviewing and restoring/purging flagged
 reports.
 
+Also built: a privacy policy and terms page (`/privacy`, `/terms`), basic
+SEO/meta tags, a favicon, robots.txt/sitemap.xml, a custom 404, and a
+mobile-responsive layout - see `docs/SITE_POLISH.md`.
+
 Not yet built: offline bundles, full multi-language coverage beyond the
-know-your-rights panel, and per-action audit logging for admin actions
-(see `docs/MODERATION.md`).
+know-your-rights panel, per-action audit logging for admin actions (see
+`docs/MODERATION.md`), and analytics (deliberately - see
+`docs/SITE_POLISH.md` on why that one isn't a "not yet").
 
 **Nothing in `seed/data/*.sample.csv` is real data.** Those files are
 placeholders showing the expected column shape — replace them with actual

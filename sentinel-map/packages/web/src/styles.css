@@ -35,9 +35,23 @@ html, body, #root {
   padding: 4px 0;
 }
 
+.radius-control {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.radius-control input[type="range"] {
+  width: 100%;
+}
+
 .hint {
   font-size: 12px;
-  color: #777;
+  /* #777 on white is ~4.48:1 - just under the 4.5:1 WCAG AA threshold for
+     normal text. #595959 clears it with margin (~7:1). */
+  color: #595959;
   margin-top: 12px;
 }
 
@@ -74,6 +88,12 @@ html, body, #root {
   padding: 6px;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+.char-count {
+  align-self: flex-end;
+  font-size: 11px;
+  color: #888;
 }
 
 /* Bot honeypot field - visually hidden without display:none/visibility:hidden,
@@ -487,4 +507,138 @@ html, body, #root {
 
 .basemap-toggle:hover {
   background: #f4f6f8;
+}
+
+.sidebar-footer-links {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-size: 11px;
+  color: #888;
+  display: flex;
+  gap: 6px;
+}
+
+.sidebar-footer-links a {
+  color: #888;
+}
+
+/* Legal pages (Privacy/Terms) and the 404 fallback */
+
+.legal-page {
+  min-height: 100%;
+  background: #f4f6f8;
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+.legal-page-content {
+  max-width: 720px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 10px;
+  padding: 32px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  line-height: 1.6;
+}
+
+.legal-back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #2b6cb0;
+  font-size: 13px;
+}
+
+.legal-page-content h1 {
+  margin-top: 0;
+}
+
+.legal-page-content h2 {
+  font-size: 16px;
+  margin-top: 28px;
+  margin-bottom: 8px;
+}
+
+.legal-updated {
+  font-size: 12px;
+  color: #595959;
+}
+
+.not-found-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.not-found-page a {
+  color: #2b6cb0;
+}
+
+/* Lets a wide table scroll horizontally on a narrow screen instead of
+   forcing the whole page wider than the viewport. */
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
+/* Mobile: the sidebar/forms/panels below are all sized for desktop by
+   default. Below this width, a fixed 260-420px panel either eats most of
+   the screen or overflows it outright - this is a real usage path for this
+   app specifically (checking the map from a phone in the field), not an
+   edge case to skip. */
+@media (max-width: 640px) {
+  .sidebar {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    width: auto;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .report-form,
+  .admin-login-form {
+    width: min(320px, 88vw);
+  }
+
+  .resources-panel {
+    width: min(420px, 92vw);
+    max-height: 85vh;
+  }
+
+  .rights-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .basemap-toggle {
+    bottom: 12px;
+    right: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .toast {
+    width: min(320px, 90vw);
+    text-align: center;
+    bottom: 12px;
+  }
+
+  .admin-dashboard {
+    padding: 12px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .legal-page-content {
+    padding: 20px;
+  }
 }

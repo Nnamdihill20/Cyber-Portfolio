@@ -12,6 +12,7 @@
     "seed:facilities": "ts-node seed/import-facilities-csv.ts",
     "seed:facilities:sample": "ts-node seed/import-facilities-csv.ts --type ICE_FIELD_OFFICE --file seed/data/ice_field_offices.sample.csv && ts-node seed/import-facilities-csv.ts --type IMMIGRATION_COURT --file seed/data/eoir_courts.sample.csv && ts-node seed/import-facilities-csv.ts --type ICE_DETENTION_FACILITY --file seed/data/detention_facilities.sample.csv",
     "seed:cameras": "ts-node seed/import-alpr-cameras-csv.ts",
+    "seed:cameras:osm": "ts-node seed/import-alpr-from-osm.ts",
     "seed:legal-aid": "ts-node seed/import-legal-aid-csv.ts",
     "seed:legal-aid:sample": "ts-node seed/import-legal-aid-csv.ts --file seed/data/legal_aid.sample.csv",
     "seed:kyr": "ts-node seed/seed-know-your-rights.ts",

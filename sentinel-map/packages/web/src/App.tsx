@@ -136,6 +136,7 @@ export default function App() {
         visibleLayers={visibleLayers}
         onToggle={handleToggle}
         radiusKm={radiusKm}
+        onRadiusChange={setRadiusKm}
         counts={{ cameras: cameras.length, facilities: facilities.length, reports: reports.length }}
         onOpenResources={() => setResourcesOpen(true)}
       />

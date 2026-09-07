@@ -143,6 +143,7 @@ function Dashboard({ username, onLoggedOut }: { username: string; onLoggedOut: (
         <p className="hint">No flagged reports right now.</p>
       )}
 
+      <div className="admin-table-scroll">
       <table className="admin-table">
         <thead>
           <tr>
@@ -190,6 +191,7 @@ function Dashboard({ username, onLoggedOut }: { username: string; onLoggedOut: (
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
