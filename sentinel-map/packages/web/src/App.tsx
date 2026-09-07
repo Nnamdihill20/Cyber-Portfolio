@@ -3,12 +3,14 @@ import {
   fetchCamerasNearby,
   fetchFacilitiesNearby,
   fetchReportsNearby,
+  flagReport,
   submitReport,
   type AlprCamera,
   type ActivityReport,
   type Facility,
 } from "./api";
 import { ReportForm } from "./components/ReportForm";
+import { ResourcesPanel } from "./components/ResourcesPanel";
 import { Sidebar } from "./components/Sidebar";
 import { MapView } from "./map/MapView";
 
@@ -31,6 +33,7 @@ export default function App() {
   const [pendingReportAt, setPendingReportAt] = useState<{ lat: number; lon: number } | null>(
     null
   );
+  const [resourcesOpen, setResourcesOpen] = useState(false);
 
   const refresh = useCallback(() => {
     const [lon, lat] = center;
@@ -47,6 +50,15 @@ export default function App() {
 
   const handleToggle = (layer: "cameras" | "facilities" | "reports") => {
     setVisibleLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
+  };
+
+  const handleFlagReport = async (id: string) => {
+    try {
+      await flagReport(id);
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleReportSubmit = async (activityType: string, description: string) => {
@@ -75,6 +87,7 @@ export default function App() {
         reports={reports}
         visibleLayers={visibleLayers}
         onMapClick={(lat, lon) => setPendingReportAt({ lat, lon })}
+        onFlagReport={handleFlagReport}
       />
       <Sidebar
         visibleLayers={visibleLayers}
@@ -82,6 +95,7 @@ export default function App() {
         radiusKm={radiusKm}
         onRadiusChange={setRadiusKm}
         counts={{ cameras: cameras.length, facilities: facilities.length, reports: reports.length }}
+        onOpenResources={() => setResourcesOpen(true)}
       />
       {pendingReportAt && (
         <ReportForm
@@ -90,6 +104,9 @@ export default function App() {
           onSubmit={handleReportSubmit}
           onCancel={() => setPendingReportAt(null)}
         />
+      )}
+      {resourcesOpen && (
+        <ResourcesPanel center={center} onClose={() => setResourcesOpen(false)} />
       )}
     </div>
   );

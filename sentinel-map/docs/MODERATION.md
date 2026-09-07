@@ -23,15 +23,20 @@ discredit the app).
   existing, unexpired report of the same `activityType` increments
   `corroborations` on the existing row instead of creating a new pin —
   this both reduces spam surface area and gives users a confidence signal.
+- **Community flagging.** `POST /api/reports/:id/flag` lets any viewer flag a
+  report as inaccurate (button in the map popup). A report hitting
+  `REPORT_FLAG_THRESHOLD` (default 3) flags is excluded from `GET .../nearby`
+  results — hidden, not deleted, so there's still something to review. The
+  flag endpoint has its own rate limit (20/hour/reporter hash) so one
+  reporter can't mass-flag reports to censor them.
 
 ## Not yet implemented — needed before public launch
 
 - **Photo/metadata sanity checks** on any submitted evidence (strip EXIF
   GPS before storage if you ever accept photos — ironic to leak a
   reporter's location while protecting everyone else's).
-- **Community flagging** to downweight or hide reports other users mark as
-  false.
 - **Geofenced flood detection** — many reports from the same rough area/hash
   in a short window should throttle harder, not just per-reporter.
-- **Human review queue** for repeated flags before a report is fully removed
-  vs. auto-expired.
+- **Human review queue / admin UI** for actually looking at hidden
+  (flagged-over-threshold) reports and deciding whether to restore or purge
+  them — right now they just sit hidden until they expire.

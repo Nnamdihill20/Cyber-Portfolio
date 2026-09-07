@@ -44,3 +44,14 @@ export const createCameraSchema = z.object({
   ownerName: z.string().max(120).optional(),
   notes: z.string().max(280).optional(),
 });
+
+const US_STATE_CODE = /^([A-Z]{2}|FEDERAL)$/;
+
+export const knowYourRightsQuerySchema = z.object({
+  state: z
+    .string()
+    .transform((s) => s.toUpperCase())
+    .refine((s) => US_STATE_CODE.test(s), "state must be a 2-letter code or FEDERAL")
+    .default("FEDERAL"),
+  lang: z.string().min(2).max(5).default("en"),
+});

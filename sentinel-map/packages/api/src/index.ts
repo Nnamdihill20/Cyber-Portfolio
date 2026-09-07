@@ -3,6 +3,8 @@ import cors from "cors";
 import express from "express";
 import { camerasRouter } from "./routes/cameras";
 import { facilitiesRouter } from "./routes/facilities";
+import { knowYourRightsRouter } from "./routes/knowYourRights";
+import { legalAidRouter } from "./routes/legalAid";
 import { reportsRouter } from "./routes/reports";
 
 const app = express();
@@ -16,6 +18,8 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/cameras", camerasRouter);
 app.use("/api/facilities", facilitiesRouter);
 app.use("/api/reports", reportsRouter);
+app.use("/api/legal-aid", legalAidRouter);
+app.use("/api/know-your-rights", knowYourRightsRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

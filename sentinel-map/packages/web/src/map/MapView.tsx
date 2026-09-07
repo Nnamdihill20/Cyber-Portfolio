@@ -14,6 +14,7 @@ interface Props {
   reports: ActivityReport[];
   visibleLayers: { cameras: boolean; facilities: boolean; reports: boolean };
   onMapClick: (lat: number, lon: number) => void;
+  onFlagReport: (id: string) => void;
 }
 
 // maplibre's TS types model "match" expressions as fixed-length tuples, which
@@ -46,6 +47,7 @@ export function MapView({
   reports,
   visibleLayers,
   onMapClick,
+  onFlagReport,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
@@ -62,8 +64,15 @@ export function MapView({
     });
     mapRef.current = map;
 
+    const markerLayers = ["cameras-layer", "facilities-layer", "reports-layer"];
+
     map.on("click", (e) => {
-      // Ignore clicks that landed on an existing marker layer (handled separately).
+      // A click that landed on an existing pin is handled by that layer's own
+      // click listener below (opens its popup) - don't also pop the "report
+      // new activity" form on top of it. queryRenderedFeatures only finds
+      // layers that exist yet, so this is naturally a no-op before "load".
+      const hitMarker = map.queryRenderedFeatures(e.point, { layers: markerLayers.filter((id) => map.getLayer(id)) });
+      if (hitMarker.length > 0) return;
       onMapClick(e.lngLat.lat, e.lngLat.lng);
     });
 
@@ -120,7 +129,6 @@ export function MapView({
       for (const [layerId, popupBuilder] of [
         ["cameras-layer", (p: any) => `<b>ALPR camera</b><br/>Vendor: ${p.vendor}<br/>Confidence: ${p.confidence}`],
         ["facilities-layer", (p: any) => `<b>${p.name}</b><br/>${p.type}`],
-        ["reports-layer", (p: any) => `<b>${p.activityType}</b><br/>Corroborations: ${p.corroborations}<br/>${p.description ?? ""}`],
       ] as const) {
         map.on("click", layerId, (e) => {
           const feature = e.features?.[0];
@@ -133,6 +141,35 @@ export function MapView({
         map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
         map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
       }
+
+      // Reports get a DOM (not HTML-string) popup so the flag button can
+      // carry a real click handler instead of inline JS.
+      map.on("click", "reports-layer", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const p = feature.properties as any;
+
+        const el = document.createElement("div");
+        el.className = "report-popup";
+        el.innerHTML = `
+          <b>${p.activityType}</b><br/>
+          Corroborations: ${p.corroborations}<br/>
+          ${p.description ?? ""}
+        `;
+        const flagBtn = document.createElement("button");
+        flagBtn.className = "flag-button";
+        flagBtn.textContent = "Flag as inaccurate";
+        flagBtn.onclick = () => {
+          onFlagReport(p.id);
+          flagBtn.disabled = true;
+          flagBtn.textContent = "Flagged - thank you";
+        };
+        el.appendChild(flagBtn);
+
+        new Popup().setLngLat((feature.geometry as any).coordinates).setDOMContent(el).addTo(map);
+      });
+      map.on("mouseenter", "reports-layer", () => (map.getCanvas().style.cursor = "pointer"));
+      map.on("mouseleave", "reports-layer", () => (map.getCanvas().style.cursor = ""));
     });
 
     return () => {

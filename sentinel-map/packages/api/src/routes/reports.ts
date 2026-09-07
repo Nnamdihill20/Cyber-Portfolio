@@ -9,9 +9,22 @@ export const reportsRouter = Router();
 const CORROBORATION_RADIUS_KM = 0.15; // ~150m
 const TTL_MINUTES = Number(process.env.REPORT_TTL_MINUTES ?? 180);
 const SALT = process.env.REPORTER_HASH_SALT ?? "dev-only-change-me";
+// A report with this many flags is hidden from results pending human review,
+// rather than deleted outright - see docs/MODERATION.md.
+const FLAG_THRESHOLD = Number(process.env.REPORT_FLAG_THRESHOLD ?? 3);
 
-const limiter = makeRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 }); // 5 reports / 10 min / reporter
-const reportRateLimit = limiter((req) => {
+const submitLimiter = makeRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 }); // 5 reports / 10 min / reporter
+const reportRateLimit = submitLimiter((req) => {
+  const ip = req.ip ?? "unknown";
+  const ua = req.get("user-agent") ?? "unknown";
+  return reporterHash(ip, ua, SALT);
+});
+
+// Separate, more generous limiter for flagging - flagging is meant to be
+// cheap for genuine users, but still bounded so one reporter hash can't mass-
+// flag many reports to censor them.
+const flagLimiter = makeRateLimiter({ windowMs: 60 * 60 * 1000, max: 20 }); // 20 flags / hour / reporter
+const flagRateLimit = flagLimiter((req) => {
   const ip = req.ip ?? "unknown";
   const ua = req.get("user-agent") ?? "unknown";
   return reporterHash(ip, ua, SALT);
@@ -31,6 +44,7 @@ reportsRouter.get("/nearby", async (req, res) => {
       latitude: { gte: bbox.minLat, lte: bbox.maxLat },
       longitude: { gte: bbox.minLon, lte: bbox.maxLon },
       expiresAt: { gt: new Date() },
+      flaggedCount: { lt: FLAG_THRESHOLD },
     },
   });
 
@@ -60,6 +74,7 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
     where: {
       activityType,
       expiresAt: { gt: new Date() },
+      flaggedCount: { lt: FLAG_THRESHOLD },
       latitude: { gte: bbox.minLat, lte: bbox.maxLat },
       longitude: { gte: bbox.minLon, lte: bbox.maxLon },
     },
@@ -90,4 +105,27 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
   });
 
   res.status(201).json({ report: created, corroborated: false });
+});
+
+// POST /api/reports/:id/flag - anonymous "this looks wrong" flag. A report
+// hits FLAG_THRESHOLD flags and it's excluded from results pending human
+// review, rather than deleted (so it isn't gone before anyone can look at
+// why it got flagged). See docs/MODERATION.md.
+reportsRouter.post("/:id/flag", flagRateLimit, async (req, res) => {
+  const { id } = req.params;
+
+  const existing = await prisma.activityReport.findUnique({ where: { id } });
+  if (!existing) {
+    return res.status(404).json({ error: "Report not found" });
+  }
+
+  const updated = await prisma.activityReport.update({
+    where: { id },
+    data: { flaggedCount: { increment: 1 } },
+  });
+
+  res.json({
+    report: updated,
+    hidden: updated.flaggedCount >= FLAG_THRESHOLD,
+  });
 });

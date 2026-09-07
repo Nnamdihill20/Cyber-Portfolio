@@ -4,9 +4,17 @@ interface Props {
   radiusKm: number;
   onRadiusChange: (km: number) => void;
   counts: { cameras: number; facilities: number; reports: number };
+  onOpenResources: () => void;
 }
 
-export function Sidebar({ visibleLayers, onToggle, radiusKm, onRadiusChange, counts }: Props) {
+export function Sidebar({
+  visibleLayers,
+  onToggle,
+  radiusKm,
+  onRadiusChange,
+  counts,
+  onOpenResources,
+}: Props) {
   return (
     <div className="sidebar">
       <h1>Sentinel Map</h1>
@@ -49,6 +57,10 @@ export function Sidebar({ visibleLayers, onToggle, radiusKm, onRadiusChange, cou
       </div>
 
       <p className="hint">Click the map to report activity at that spot.</p>
+
+      <button className="resources-button" onClick={onOpenResources}>
+        Know your rights &amp; legal aid
+      </button>
     </div>
   );
 }

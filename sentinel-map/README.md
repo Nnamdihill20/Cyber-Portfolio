@@ -19,6 +19,12 @@ why that line is drawn and kept.
 See [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) for exact sourcing per
 layer, and [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design.
 
+Alongside the map: a **know-your-rights** panel (state + language selector)
+and a **legal aid directory** (nearest-first, plus statewide/national
+hotlines), both reachable from the sidebar. Activity reports can also be
+**flagged as inaccurate** from their map popup — a report hit repeatedly
+is hidden pending review rather than deleted outright.
+
 ## Structure
 
 ```
@@ -43,6 +49,8 @@ cp .env.example .env
 npm install
 npx prisma migrate dev --name init
 npm run seed:facilities:sample   # loads the sample/placeholder CSVs
+npm run seed:legal-aid:sample    # loads the sample/placeholder legal aid CSV
+npm run seed:kyr                 # loads the general know-your-rights content
 npm run dev                       # http://localhost:4000
 
 # 3. Web
@@ -53,10 +61,13 @@ npm run dev                       # http://localhost:5173
 
 ## Status
 
-This is an initial scaffold: schema, API routes, seed-import scripts, and a
-working map UI with layer toggles. Not yet built: submission moderation UI,
-know-your-rights content, legal-aid directory, offline bundles, and
-multi-language support — see the roadmap in the project plan for sequencing.
+Built: the three map layers, layer-toggle UI, community submission for
+cameras and reports, corroboration merging, per-reporter rate limiting,
+community flagging on reports, a know-your-rights panel (with an English/
+Spanish federal-level entry seeded), and a legal-aid directory.
+
+Not yet built: offline bundles, full multi-language coverage beyond the
+know-your-rights panel, and an admin/review UI for flagged reports.
 
 **Nothing in `seed/data/*.sample.csv` is real data.** Those files are
 placeholders showing the expected column shape — replace them with actual

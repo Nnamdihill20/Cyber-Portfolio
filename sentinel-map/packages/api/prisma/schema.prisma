@@ -137,3 +137,42 @@ model ActivityReport {
   @@index([latitude, longitude])
   @@index([expiresAt])
 }
+
+// ---- Support resources: legal aid + know-your-rights content ---------------
+// Not a map layer of surveillance/enforcement - these are resources *for* the
+// person using the app, surfaced alongside the map.
+
+model LegalAidOrg {
+  id         String   @id @default(uuid())
+  name       String
+  // Null lat/lon means a statewide or national hotline - it has no single
+  // physical point, so it's returned by every nearby-search regardless of
+  // distance rather than being geo-filtered out. See routes/legalAid.ts.
+  latitude   Float?
+  longitude  Float?
+  phone      String?
+  website    String?
+  languages  String[] // e.g. ["en", "es"]
+  specialty  String? // e.g. "immigration", "criminal_defense", "general"
+  hours      String?
+  notes      String?
+  source     String
+  createdAt  DateTime @default(now())
+
+  @@index([latitude, longitude])
+}
+
+// General, jurisdiction-agnostic "know your rights" content, not
+// jurisdiction-specific legal advice. Keyed by state so a state with no
+// entry of its own falls back to "FEDERAL" (general constitutional rights
+// that apply everywhere in the US). See seed/seed-know-your-rights.ts.
+model KnowYourRightsContent {
+  id        String   @id @default(uuid())
+  state     String // two-letter state code, or "FEDERAL"
+  language  String   @default("en")
+  title     String
+  body      String
+  updatedAt DateTime @updatedAt
+
+  @@unique([state, language])
+}

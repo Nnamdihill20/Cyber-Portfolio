@@ -1,0 +1,3 @@
+name,latitude,longitude,phone,website,languages,specialty,hours,notes
+PLACEHOLDER - Example Local Legal Aid Clinic (replace with real data),41.8781,-87.6298,,,en|es,immigration,,This row is a placeholder to show the expected column shape. Do not treat as real.
+PLACEHOLDER - Example National Hotline (replace with real data),,,,,en|es,immigration,24/7,"No latitude/longitude - statewide/national hotlines are shown everywhere, see docs/DATA_SOURCES.md"

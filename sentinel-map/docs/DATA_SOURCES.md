@@ -34,3 +34,21 @@ feed — track `lastVerifiedAt` per record and re-check on a schedule).
 No external source — anonymous community submission only, through the app
 itself. See `docs/MODERATION.md` for abuse-prevention design before
 enabling submissions publicly.
+
+## Support resources — legal aid & know-your-rights
+
+| Source | Covers | Access |
+|---|---|---|
+| [ImmigrationLawHelp.org](https://www.immigrationlawhelp.org) | National directory of nonprofit immigration legal service providers | Public directory, searchable by location |
+| [211.org](https://www.211.org) | General local health/legal/social service referrals by area | Public directory |
+| State ACLU affiliates | State-specific know-your-rights guidance, often reviewed by attorneys | Public, per-state websites |
+
+Import with `packages/api/seed/import-legal-aid-csv.ts` after compiling a
+CSV from these directories for your target area(s) - like the facilities
+layer, this isn't a live feed, so track and periodically re-verify entries.
+
+**Get real legal review before publishing state-specific know-your-rights
+content.** `packages/api/seed/seed-know-your-rights.ts` ships only generic,
+widely-published federal constitutional-rights information (the "FEDERAL"
+fallback) - it is not a substitute for state-specific content reviewed by a
+local attorney, and it is not legal advice. See `docs/LEGAL.md`.
