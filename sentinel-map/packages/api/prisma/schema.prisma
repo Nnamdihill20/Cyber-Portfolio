@@ -1,9 +1,13 @@
 // Sentinel Map data model.
 //
-// Deliberate constraint (see /docs/LEGAL.md): no model in this schema may
-// carry a field that identifies a specific individual. Every model here
-// describes a place (AlprCamera, Facility) or an anonymous, decaying event
-// (ActivityReport) - never a person.
+// Deliberate constraint (see /docs/LEGAL.md): no model describing map data
+// may carry a field that identifies a specific individual. Every map-data
+// model here describes a place (AlprCamera, Facility) or an anonymous,
+// decaying event (ActivityReport) - never a person being tracked by the app.
+// AdminUser below is a different category entirely: it's an account for
+// someone *operating* this app's moderation queue, not a person the app
+// surfaces on the map - the same distinction as staff credentials for any
+// admin panel.
 
 datasource db {
   provider = "postgresql"
@@ -175,4 +179,17 @@ model KnowYourRightsContent {
   updatedAt DateTime @updatedAt
 
   @@unique([state, language])
+}
+
+// ---- Admin / moderation --------------------------------------------------
+
+// A moderator account for the flagged-reports review UI (see
+// routes/adminAuth.ts, routes/adminReports.ts). Provisioned only via the
+// `create-admin` CLI script - there is deliberately no public signup
+// endpoint. See docs/SECURITY.md for the auth design.
+model AdminUser {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
 }

@@ -76,3 +76,10 @@ export const knowYourRightsQuerySchema = z.object({
     .default("FEDERAL"),
   lang: z.string().min(2).max(5).default("en"),
 });
+
+export const adminLoginSchema = z
+  .object({
+    username: z.string().min(1).max(100),
+    password: z.string().min(1).max(200),
+  })
+  .strict();

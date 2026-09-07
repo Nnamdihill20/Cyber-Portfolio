@@ -45,7 +45,19 @@ this file is specifically about abuse of the anonymous-submission model.
   returned in every report API response — harmless-looking, but it let any
   client correlate "these reports came from the same device," undercutting
   the anonymity this layer is built around. Stripped from all responses
-  now (`toPublicReport()` in `routes/reports.ts`).
+  now (`toPublicReport()` in `routes/reports.ts`), including the admin
+  endpoints below - moderators review report *content*, not who sent it.
+- **Human review / admin UI.** `/admin` (see `packages/web/src/admin/`) is
+  a login-gated dashboard listing every flagged report - including ones
+  still below `REPORT_FLAG_THRESHOLD` that the public can still see, so a
+  moderator can catch a pattern before it hits the auto-hide threshold, not
+  only after. Each row can be **Restored** (clears its flags, back to
+  normal visibility - a moderator judged the flags weren't warranted) or
+  **Purged** (hard-deleted - the flags were right: spam, harassment,
+  fabricated). See `docs/SECURITY.md` for the auth design behind `/admin`
+  (hashed passwords, rate-limited login, `httpOnly`/`sameSite=strict`
+  session cookie) and `packages/api/seed/create-admin.ts` for how an
+  account gets provisioned (no self-service signup, by design).
 
 ## Not yet implemented — needed before public launch
 
@@ -56,11 +68,10 @@ this file is specifically about abuse of the anonymous-submission model.
   feature exists.
 - **Geofenced flood detection** — many reports from the same rough area/hash
   in a short window should throttle harder, not just per-reporter.
-- **Human review queue / admin UI** for actually looking at hidden
-  (flagged-over-threshold) reports and deciding whether to restore or purge
-  them — right now they just sit hidden until they expire. This is also
-  where a real login/session system would first enter this app — see
-  `docs/SECURITY.md` on why that isn't built preemptively.
 - **A real CAPTCHA** (e.g. Cloudflare Turnstile or hCaptcha) in front of
   submission, once launch scale makes the honeypot's limits (see above)
   worth the added friction and third-party dependency.
+- **Multiple admin accounts with roles/audit log** - today every admin
+  account can do everything (restore, purge) and there's no record of
+  which moderator took which action. Fine for a single small trusted team;
+  add per-action audit logging before the team grows.

@@ -26,7 +26,9 @@ Alongside the map: a **know-your-rights** panel (state + language selector)
 and a **legal aid directory** (nearest-first, plus statewide/national
 hotlines), both reachable from the sidebar. Activity reports can also be
 **flagged as inaccurate** from their map popup — a report hit repeatedly
-is hidden pending review rather than deleted outright.
+is hidden pending review rather than deleted outright, and a moderator can
+review every flagged report (not just hidden ones) at **`/admin`** — see
+below for how to create an admin login.
 
 ## Structure
 
@@ -54,12 +56,13 @@ npx prisma migrate dev --name init
 npm run seed:facilities:sample   # loads the sample/placeholder CSVs
 npm run seed:legal-aid:sample    # loads the sample/placeholder legal aid CSV
 npm run seed:kyr                 # loads the general know-your-rights content
+npm run create-admin -- --username you --password 'a real passphrase, 12+ chars'
 npm run dev                       # http://localhost:4000
 
 # 3. Web
 cd ../web
 npm install
-npm run dev                       # http://localhost:5173
+npm run dev                       # http://localhost:5173, moderation dashboard at /admin
 ```
 
 ## Status
@@ -67,10 +70,13 @@ npm run dev                       # http://localhost:5173
 Built: the three map layers, layer-toggle UI, community submission for
 cameras and reports, corroboration merging, per-reporter rate limiting,
 community flagging on reports, a know-your-rights panel (with an English/
-Spanish federal-level entry seeded), and a legal-aid directory.
+Spanish federal-level entry seeded), a legal-aid directory, and a
+login-gated `/admin` dashboard for reviewing and restoring/purging flagged
+reports.
 
 Not yet built: offline bundles, full multi-language coverage beyond the
-know-your-rights panel, and an admin/review UI for flagged reports.
+know-your-rights panel, and per-action audit logging for admin actions
+(see `docs/MODERATION.md`).
 
 **Nothing in `seed/data/*.sample.csv` is real data.** Those files are
 placeholders showing the expected column shape — replace them with actual

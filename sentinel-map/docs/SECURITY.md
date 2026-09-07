@@ -1,11 +1,12 @@
 # Security posture
 
-This app is intentionally accountless: every write (a camera submission, an
-activity report, a flag) is anonymous, and every read is public data. That
-shapes which items on a standard web-app security checklist apply here and
-which don't - a few assume a login/session system this app deliberately
-doesn't have. Below, each item says what's done, where, and why - or why it
-doesn't apply to this architecture.
+The public side of this app is intentionally accountless: every write (a
+camera submission, an activity report, a flag) is anonymous, and every read
+is public data. `/admin` (the flagged-reports moderation dashboard) is the
+one exception - a real login system, built when there was an actual admin
+surface to protect it, not preemptively. Below, each checklist item says
+what's done, where, and why - or why it doesn't apply to the public side's
+architecture.
 
 ## Applies directly - done
 
@@ -21,17 +22,22 @@ doesn't apply to this architecture.
    ever touches - a reporter's IP+User-Agent - is never stored raw; only a
    salted SHA-256 hash is kept (`src/lib/geo.ts#reporterHash`), and even
    that hash is now stripped from every API response (see #17).
-6. **Enforce server-side authorization on writes.** No endpoint accepts a
-   client-supplied trust/verification field: `POST /api/cameras` always
-   sets `confidence: COMMUNITY_REPORTED` and `source` itself regardless of
-   what the client sends; `POST /api/reports` always sets `reporterHash`
-   and `expiresAt` server-side. A client cannot submit as `VERIFIED` or
-   set its own expiry.
-7. **Lock down record access.** There is no update/delete endpoint for
-   cameras or facilities at all (read + create only), and the only mutation
-   an activity report accepts is its own flag counter - there's no
-   "edit someone else's record" surface to lock down because it doesn't
-   exist.
+6. **Enforce server-side authorization on writes.** No public endpoint
+   accepts a client-supplied trust/verification field: `POST /api/cameras`
+   always sets `confidence: COMMUNITY_REPORTED` and `source` itself
+   regardless of what the client sends; `POST /api/reports` always sets
+   `reporterHash` and `expiresAt` server-side. A client cannot submit as
+   `VERIFIED` or set its own expiry. The only endpoints that *can* mutate
+   or delete an existing record - `POST /api/admin/reports/:id/restore` and
+   `DELETE /api/admin/reports/:id` - are behind `requireAdmin` (see below),
+   applied once for the whole router so a new admin route added later can't
+   ship unprotected by accident.
+7. **Lock down record access.** Cameras and facilities still have no
+   update/delete endpoint at all (read + create only). Activity reports
+   accept exactly two mutations from the public (their own flag counter,
+   via a rate-limited endpoint) and two more from an authenticated admin
+   (restore, purge) - there is no path for one anonymous submitter to
+   modify or remove another's record.
 8. **Block field tampering.** Every write schema in `lib/validation.ts` is
    now `.strict()` - a request body with an unrecognized field (e.g. trying
    to set `flaggedCount` or `corroborations` directly) is rejected with a
@@ -83,26 +89,50 @@ doesn't apply to this architecture.
 
 ## Rate limiting (item 11, generalized)
 
-There's no login to rate-limit, but the same principle - bound how often an
-anonymous actor can hit a sensitive endpoint - applies to every write here:
+The same principle - bound how often an actor can hit a sensitive endpoint -
+applies to every write here, login included now that one exists:
 
 - `POST /api/reports`: 5 / 10 min per reporter hash (already existed).
 - `POST /api/reports/:id/flag`: 20 / hour per reporter hash (already existed).
-- `POST /api/cameras`: **was unlimited - fixed this pass.** Now 5 / 10 min
-  per reporter hash, same shape as report submission.
+- `POST /api/cameras`: **was unlimited - fixed in the previous pass.** Now
+  5 / 10 min per reporter hash, same shape as report submission.
+- `POST /api/admin/login`: 10 attempts / 15 min per IP (there's no reporter
+  hash pre-authentication) - tighter than the public limits above, since a
+  failed login is a much stronger abuse signal than an extra map pin.
+
+## The admin login (items 9, 10, 11 - now built, not skipped)
+
+`/admin` is a login-gated dashboard for reviewing flagged reports (see
+`docs/MODERATION.md`). Building it meant the three items below stopped
+being N/A:
+
+- **10. Hash passwords.** `bcryptjs`, 12 rounds
+  (`src/lib/adminAuth.ts#hashPassword`). No password is ever stored or
+  logged in plaintext. Accounts are provisioned only via
+  `seed/create-admin.ts` (a local CLI script, not an API endpoint) - there
+  is no public signup surface to abuse in the first place.
+- **9. Secure session cookies.** A signed JWT (`jsonwebtoken`, 8h expiry)
+  in a cookie that is `httpOnly` (unreachable from JS, so an XSS elsewhere
+  in the app can't steal it), `sameSite=strict` (the browser won't attach
+  it to any cross-site request at all - form-based or fetch-based, which is
+  what actually stops CSRF here, not the CORS config), and `secure` in
+  production (never sent over plain HTTP). This assumes the admin UI and
+  API are served from the same origin in production - see the CORS comment
+  in `src/index.ts` for why that matters.
+- **11. Rate-limit login.** Covered above. On top of that: a failed login
+  returns the identical "Invalid username or password" whether the
+  username doesn't exist or the password was wrong (no
+  username-enumeration oracle), and a lookup miss is compared against a
+  precomputed dummy bcrypt hash so it takes about as long as a real
+  password check (no timing oracle either).
+
+`ADMIN_JWT_SECRET` (`.env.example`) signs those sessions. Unlike
+`REPORTER_HASH_SALT`, a weak value here is a full auth bypass, not just a
+correlation weakness - the app refuses to start with the placeholder value
+when `NODE_ENV=production` (`src/lib/adminAuth.ts#getJwtSecret`).
 
 ## Doesn't apply to this architecture (and why)
 
-- **9. Secure session cookies / 10. Hash passwords / 11. Rate-limit login
-  (as literally "login").** There is no login, no account, no session, no
-  password anywhere in this app - it's anonymous by design (see
-  `docs/LEGAL.md`). These become relevant the moment an admin/moderation
-  login is built for the "human review queue" `docs/MODERATION.md` still
-  lists as not-yet-built - at that point: bcrypt/argon2 for any password,
-  `httpOnly` + `secure` + `sameSite=strict` cookies or a signed JWT for the
-  session, and a real rate limit on the login endpoint itself. Don't add
-  fake auth scaffolding now just to check this box - build it when there's
-  an actual admin surface to protect.
 - **3. Use a public DB key / 4. Enable row-level security.** These are the
   right controls for an architecture where the browser talks to the
   database directly (e.g. Supabase/Firebase with a publishable client key).

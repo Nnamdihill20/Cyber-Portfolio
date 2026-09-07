@@ -1,7 +1,10 @@
 import "dotenv/config";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import { adminAuthRouter } from "./routes/adminAuth";
+import { adminReportsRouter } from "./routes/adminReports";
 import { camerasRouter } from "./routes/cameras";
 import { facilitiesRouter } from "./routes/facilities";
 import { knowYourRightsRouter } from "./routes/knowYourRights";
@@ -23,15 +26,21 @@ app.set("query parser", "simple");
 
 app.use(helmet());
 
-// Permissive CORS is intentional here, not an oversight: every response is
-// either public read data (cameras/facilities/reports/legal-aid/rights) or
-// an anonymous, unauthenticated write - there's no session cookie or
-// per-user data for a cross-origin page to steal, so the usual CORS-as-
-// CSRF-defense concern doesn't apply the way it would for an authenticated
-// app. Revisit this if an authenticated admin/moderation API is added
-// alongside this one (see docs/MODERATION.md's "human review queue").
+// Permissive CORS is intentional here, not an oversight, and the admin
+// session cookie added below doesn't change that calculus: cors() with no
+// options does NOT send Access-Control-Allow-Credentials, so browsers won't
+// attach or expose cookies on a cross-origin request regardless of the
+// reflected origin - the admin API is only usable same-origin (the intended
+// deployment: web + API behind one host/reverse proxy). Every *public*
+// response here is either read data or an anonymous, unauthenticated write,
+// so there's no session or per-user data for a cross-origin page to steal
+// through this permissive setting. Don't add `credentials: true` to this
+// without also narrowing `origin` to a specific trusted value - the two
+// together (wildcard-ish origin + credentials) is what turns permissive
+// CORS into a real cross-origin/CSRF hole.
 app.use(cors());
 
+app.use(cookieParser());
 app.use(express.json({ limit: "10kb" })); // every payload this API accepts is small; reject the rest outright
 
 // Redirect to HTTPS in production, behind a reverse proxy/load balancer
@@ -52,6 +61,8 @@ app.use("/api/facilities", facilitiesRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/legal-aid", legalAidRouter);
 app.use("/api/know-your-rights", knowYourRightsRouter);
+app.use("/api/admin", adminAuthRouter);
+app.use("/api/admin/reports", adminReportsRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   // Log the real error server-side, but never let its details (stack
