@@ -1,3 +1,5 @@
+import { ThemeToggle } from "./ThemeToggle";
+
 interface Props {
   visibleLayers: { cameras: boolean; facilities: boolean; reports: boolean };
   onToggle: (layer: "cameras" | "facilities" | "reports") => void;
@@ -17,8 +19,13 @@ export function Sidebar({
 }: Props) {
   return (
     <div className="sidebar">
-      <h1>Sentinel Map</h1>
-      <p className="subtitle">Public infrastructure &amp; anonymous activity reports</p>
+      <div className="sidebar-header">
+        <div>
+          <h1>Sentinel Map</h1>
+          <p className="subtitle">Public infrastructure &amp; anonymous activity reports</p>
+        </div>
+        <ThemeToggle />
+      </div>
 
       <label className="layer-row">
         <input

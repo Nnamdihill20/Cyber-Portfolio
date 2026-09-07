@@ -5,8 +5,13 @@ import AdminApp from "./admin/AdminApp";
 import NotFound from "./NotFound";
 import PrivacyPolicy from "./legal/PrivacyPolicy";
 import Terms from "./legal/Terms";
+import { applyStoredTheme } from "./lib/theme";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles.css";
+
+// Before anything renders, not after - otherwise a user who chose dark mode
+// sees a flash of the light theme on every page load first.
+applyStoredTheme();
 
 // A handful of routes doesn't earn a routing library - a plain pathname
 // check picks the right page. Both the Vite dev server and a standard

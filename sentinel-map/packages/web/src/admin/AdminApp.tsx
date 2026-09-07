@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "../components/ThemeToggle";
 import {
   fetchFlaggedReports,
   login,
@@ -134,6 +135,7 @@ function Dashboard({ username, onLoggedOut }: { username: string; onLoggedOut: (
           <span className="admin-username">{username}</span>
           <button onClick={load}>Refresh</button>
           <button onClick={handleLogout}>Sign out</button>
+          <ThemeToggle />
         </div>
       </header>
 
