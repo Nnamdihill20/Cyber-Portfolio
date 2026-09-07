@@ -46,7 +46,8 @@ export interface KnowYourRightsContent {
   state: string;
   language: string;
   title: string;
-  body: string;
+  intro: string;
+  bullets: string[];
 }
 
 const BASE = "/api";
@@ -81,7 +82,7 @@ export async function submitReport(input: {
   activityType: string;
   description?: string;
   honeypot?: string;
-}) {
+}): Promise<{ report: ActivityReport; corroborated: boolean }> {
   const res = await fetch(`${BASE}/reports`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

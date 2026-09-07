@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchCamerasNearby,
   fetchFacilitiesNearby,
@@ -16,10 +16,13 @@ import { MapView } from "./map/MapView";
 
 // Default center is a placeholder (Chicago, roughly) - swap for
 // navigator.geolocation once you're ready to use the visitor's real location.
+// It only matters for the very first load, though: the map keeps this in
+// sync with wherever the user actually pans to (see onCenterChange below),
+// so "nearby" always means nearby the current view, not this fixed point.
 const DEFAULT_CENTER: [number, number] = [-87.6298, 41.8781];
 
 export default function App() {
-  const [center] = useState<[number, number]>(DEFAULT_CENTER);
+  const [center, setCenter] = useState<[number, number]>(DEFAULT_CENTER);
   const [radiusKm, setRadiusKm] = useState(5);
   const [visibleLayers, setVisibleLayers] = useState({
     cameras: true,
@@ -34,6 +37,14 @@ export default function App() {
     null
   );
   const [resourcesOpen, setResourcesOpen] = useState(false);
+
+  const [toast, setToast] = useState<{ text: string; kind: "success" | "error" } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (text: string, kind: "success" | "error" = "success") => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ text, kind });
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  };
 
   const refresh = useCallback(() => {
     const [lon, lat] = center;
@@ -55,9 +66,11 @@ export default function App() {
   const handleFlagReport = async (id: string) => {
     try {
       await flagReport(id);
+      showToast("Report flagged - thank you");
       refresh();
     } catch (err) {
       console.error(err);
+      showToast("Failed to flag report", "error");
     }
   };
 
@@ -68,7 +81,7 @@ export default function App() {
   ) => {
     if (!pendingReportAt) return;
     try {
-      await submitReport({
+      const result = await submitReport({
         latitude: pendingReportAt.lat,
         longitude: pendingReportAt.lon,
         activityType,
@@ -76,10 +89,15 @@ export default function App() {
         honeypot: honeypot || undefined,
       });
       setPendingReportAt(null);
+      showToast(
+        result.corroborated
+          ? "Submitted - matches an existing nearby report"
+          : "Report submitted"
+      );
       refresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to submit report - see console.");
+      showToast("Failed to submit report - see console for details", "error");
     }
   };
 
@@ -93,6 +111,7 @@ export default function App() {
         visibleLayers={visibleLayers}
         onMapClick={(lat, lon) => setPendingReportAt({ lat, lon })}
         onFlagReport={handleFlagReport}
+        onCenterChange={(lat, lon) => setCenter([lon, lat])}
       />
       <Sidebar
         visibleLayers={visibleLayers}
@@ -113,6 +132,7 @@ export default function App() {
       {resourcesOpen && (
         <ResourcesPanel center={center} onClose={() => setResourcesOpen(false)} />
       )}
+      {toast && <div className={`toast toast-${toast.kind}`}>{toast.text}</div>}
     </div>
   );
 }

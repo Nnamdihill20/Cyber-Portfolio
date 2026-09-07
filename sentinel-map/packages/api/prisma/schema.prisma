@@ -175,6 +175,13 @@ model KnowYourRightsContent {
   state     String // two-letter state code, or "FEDERAL"
   language  String   @default("en")
   title     String
+  // JSON-encoded { intro: string, bullets: string[] } - deliberately NOT a
+  // flat prose string. An earlier version stored formatted prose here and
+  // stray line breaks from how the seed file's source happened to be
+  // wrapped leaked into the rendered UI as ragged spacing. Structuring each
+  // bullet as its own array element makes that class of bug impossible -
+  // see routes/knowYourRights.ts (parses this before responding) and
+  // seed/seed-know-your-rights.ts.
   body      String
   updatedAt DateTime @updatedAt
 

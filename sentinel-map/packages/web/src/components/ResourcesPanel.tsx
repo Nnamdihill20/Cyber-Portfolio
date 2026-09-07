@@ -93,7 +93,12 @@ export function ResourcesPanel({ center, onClose }: Props) {
             {!loading && content && (
               <>
                 <h3>{content.title}</h3>
-                <p className="rights-body">{content.body}</p>
+                <p className="rights-intro">{content.intro}</p>
+                <ul className="rights-bullets">
+                  {content.bullets.map((bullet, i) => (
+                    <li key={i}>{bullet}</li>
+                  ))}
+                </ul>
               </>
             )}
             {!loading && !content && (

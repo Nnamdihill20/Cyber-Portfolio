@@ -3,9 +3,25 @@ import { useEffect, useRef } from "react";
 import type { AlprCamera, ActivityReport, Facility } from "../api";
 import { ACTIVITY_COLORS, FACILITY_COLORS, VENDOR_COLORS } from "./layerStyles";
 
-// Free, no-key-required demo style/tiles - swap for your own vector tile
-// source (e.g. self-hosted OpenMapTiles or MapTiler) before real deployment.
-const DEMO_STYLE = "https://demotiles.maplibre.org/style.json";
+// Free, no-key-required raster basemap with real worldwide detail at every
+// zoom level. OSM's tile server is meant for light/dev use per their tile
+// usage policy (https://operations.osmfoundation.org/policies/tiles/) -
+// swap for a proper provider (self-hosted OpenMapTiles, MapTiler, etc.)
+// before any real deployment/traffic. Attribution is required and set
+// below - MapLibre's built-in AttributionControl renders it automatically.
+const OSM_RASTER_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      attribution: "&copy; OpenStreetMap contributors",
+      maxzoom: 19,
+    },
+  },
+  layers: [{ id: "osm-tiles", type: "raster", source: "osm" }],
+};
 
 interface Props {
   center: [number, number]; // [lon, lat]
@@ -15,6 +31,7 @@ interface Props {
   visibleLayers: { cameras: boolean; facilities: boolean; reports: boolean };
   onMapClick: (lat: number, lon: number) => void;
   onFlagReport: (id: string) => void;
+  onCenterChange: (lat: number, lon: number) => void;
 }
 
 // maplibre's TS types model "match" expressions as fixed-length tuples, which
@@ -48,6 +65,7 @@ export function MapView({
   visibleLayers,
   onMapClick,
   onFlagReport,
+  onCenterChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
@@ -58,11 +76,22 @@ export function MapView({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DEMO_STYLE,
+      style: OSM_RASTER_STYLE,
       center,
       zoom: 12,
+      maxZoom: 19,
+      minZoom: 1, // 0 renders the world tile repeated oddly at this style's tileSize; 1 is the practical floor
     });
+    map.addControl(new maplibregl.NavigationControl(), "top-right"); // visible +/- zoom buttons, not just scroll/pinch
     mapRef.current = map;
+
+    // "Nearby" is only meaningful relative to where the user is actually
+    // looking - refetch centered on wherever they pan/zoom to, instead of
+    // forever querying around the initial default location.
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      onCenterChange(c.lat, c.lng);
+    });
 
     const markerLayers = ["cameras-layer", "facilities-layer", "reports-layer"];
 
