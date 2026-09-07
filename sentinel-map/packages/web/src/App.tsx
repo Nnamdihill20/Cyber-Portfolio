@@ -12,18 +12,16 @@ import {
 import { ReportForm } from "./components/ReportForm";
 import { ResourcesPanel } from "./components/ResourcesPanel";
 import { Sidebar } from "./components/Sidebar";
-import { MapView } from "./map/MapView";
+import { MapView, type MapViewHandle } from "./map/MapView";
 
-// Default center is a placeholder (Chicago, roughly) - swap for
-// navigator.geolocation once you're ready to use the visitor's real location.
-// It only matters for the very first load, though: the map keeps this in
-// sync with wherever the user actually pans to (see onCenterChange below),
-// so "nearby" always means nearby the current view, not this fixed point.
+// Fallback only - used until geolocation resolves (or if it's denied/
+// unavailable), never the app's steady-state location. See the geolocation
+// effect below.
 const DEFAULT_CENTER: [number, number] = [-87.6298, 41.8781];
 
 export default function App() {
   const [center, setCenter] = useState<[number, number]>(DEFAULT_CENTER);
-  const [radiusKm, setRadiusKm] = useState(5);
+  const [radiusKm, setRadiusKm] = useState(5); // real value arrives within one frame, from MapView's initial viewport report
   const [visibleLayers, setVisibleLayers] = useState({
     cameras: true,
     facilities: true,
@@ -37,6 +35,7 @@ export default function App() {
     null
   );
   const [resourcesOpen, setResourcesOpen] = useState(false);
+  const mapViewRef = useRef<MapViewHandle>(null);
 
   const [toast, setToast] = useState<{ text: string; kind: "success" | "error" } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,6 +44,22 @@ export default function App() {
     setToast({ text, kind });
     toastTimer.current = setTimeout(() => setToast(null), 3500);
   };
+
+  // Center the map on the visitor's real location as soon as the browser
+  // will give it up. Falls back to DEFAULT_CENTER silently on denial/
+  // timeout/unsupported browsers - there's no good UI for "we don't know
+  // where you are," so the map just stays where it started.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        mapViewRef.current?.flyTo(latitude, longitude);
+      },
+      (err) => console.warn("Geolocation unavailable - staying at the default location:", err.message),
+      { timeout: 8000 }
+    );
+  }, []);
 
   const refresh = useCallback(() => {
     const [lon, lat] = center;
@@ -104,6 +119,7 @@ export default function App() {
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       <MapView
+        ref={mapViewRef}
         center={center}
         cameras={cameras}
         facilities={facilities}
@@ -111,13 +127,15 @@ export default function App() {
         visibleLayers={visibleLayers}
         onMapClick={(lat, lon) => setPendingReportAt({ lat, lon })}
         onFlagReport={handleFlagReport}
-        onCenterChange={(lat, lon) => setCenter([lon, lat])}
+        onViewportChange={(lat, lon, km) => {
+          setCenter([lon, lat]);
+          setRadiusKm(km);
+        }}
       />
       <Sidebar
         visibleLayers={visibleLayers}
         onToggle={handleToggle}
         radiusKm={radiusKm}
-        onRadiusChange={setRadiusKm}
         counts={{ cameras: cameras.length, facilities: facilities.length, reports: reports.length }}
         onOpenResources={() => setResourcesOpen(true)}
       />

@@ -22,6 +22,16 @@ layer, [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design, and
 (what's hardened, what's mitigated, and what's intentionally not built
 given this app has no accounts or sessions).
 
+The map centers on the visitor's real location via browser geolocation
+(falls back to a fixed default if denied/unavailable), and the search
+radius auto-follows whatever's currently visible on screen — pan or zoom
+and it refetches to match, rather than a fixed radius that can disagree
+with what's on screen. A **satellite/street toggle** (bottom-right on the
+map) switches basemaps without losing any of the plotted pins. Zero
+counts for cameras/facilities in your area almost always means no data has
+been imported there yet (see `docs/DATA_SOURCES.md`), not a bug — the
+sample CSVs are placeholders, not real coverage.
+
 Alongside the map: a **know-your-rights** panel (state + language selector)
 and a **legal aid directory** (nearest-first, plus statewide/national
 hotlines), both reachable from the sidebar. Activity reports can also be

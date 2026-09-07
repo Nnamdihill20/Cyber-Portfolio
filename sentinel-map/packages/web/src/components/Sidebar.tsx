@@ -2,19 +2,11 @@ interface Props {
   visibleLayers: { cameras: boolean; facilities: boolean; reports: boolean };
   onToggle: (layer: "cameras" | "facilities" | "reports") => void;
   radiusKm: number;
-  onRadiusChange: (km: number) => void;
   counts: { cameras: number; facilities: number; reports: number };
   onOpenResources: () => void;
 }
 
-export function Sidebar({
-  visibleLayers,
-  onToggle,
-  radiusKm,
-  onRadiusChange,
-  counts,
-  onOpenResources,
-}: Props) {
+export function Sidebar({ visibleLayers, onToggle, radiusKm, counts, onOpenResources }: Props) {
   return (
     <div className="sidebar">
       <h1>Sentinel Map</h1>
@@ -45,16 +37,12 @@ export function Sidebar({
         Activity reports ({counts.reports})
       </label>
 
-      <div className="radius-control">
-        <label>Search radius: {radiusKm} km</label>
-        <input
-          type="range"
-          min={1}
-          max={25}
-          value={radiusKm}
-          onChange={(e) => onRadiusChange(Number(e.target.value))}
-        />
-      </div>
+      {/* Radius follows the visible map area automatically (pan/zoom to
+          change it) - see MapView.tsx's onViewportChange. A manual slider
+          used to control this independently of what was on screen, which
+          is exactly what made pins seem to vanish: the query radius and
+          the visible area could disagree. */}
+      <p className="hint">Showing everything within ~{radiusKm.toFixed(1)} km (matches the map view)</p>
 
       <p className="hint">Click the map to report activity at that spot.</p>
 
