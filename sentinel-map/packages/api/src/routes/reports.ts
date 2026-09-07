@@ -1,7 +1,8 @@
 import { Router } from "express";
+import type { ActivityReport } from "@prisma/client";
 import { prisma } from "../db";
 import { boundingBox, haversineKm, reporterHash } from "../lib/geo";
-import { createReportSchema, nearbyQuerySchema } from "../lib/validation";
+import { createReportSchema, nearbyQuerySchema, reportIdParamSchema } from "../lib/validation";
 import { makeRateLimiter } from "../middleware/rateLimit";
 
 export const reportsRouter = Router();
@@ -30,6 +31,17 @@ const flagRateLimit = flagLimiter((req) => {
   return reporterHash(ip, ua, SALT);
 });
 
+// reporterHash never leaves this file: it's an internal correlation key for
+// rate limiting and corroboration-merge lookups, not something any client
+// needs. Returning it in API responses would hand every viewer a stable,
+// crossable ID that identifies "these reports came from the same device" -
+// directly undermining the anonymity this layer is built around (see
+// docs/LEGAL.md). Every response goes through this before res.json().
+function toPublicReport(report: ActivityReport) {
+  const { reporterHash: _reporterHash, ...publicFields } = report;
+  return publicFields;
+}
+
 // GET /api/reports/nearby?lat=&lon=&radiusKm= - only unexpired reports.
 reportsRouter.get("/nearby", async (req, res) => {
   const parsed = nearbyQuerySchema.safeParse(req.query);
@@ -52,7 +64,7 @@ reportsRouter.get("/nearby", async (req, res) => {
     (r) => haversineKm(lat, lon, r.latitude, r.longitude) <= radiusKm
   );
 
-  res.json({ reports });
+  res.json({ reports: reports.map(toPublicReport) });
 });
 
 // POST /api/reports - anonymous submission. Rate-limited per reporter hash;
@@ -63,7 +75,28 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
-  const { latitude, longitude, activityType, description } = parsed.data;
+  const { latitude, longitude, activityType, description, honeypot } = parsed.data;
+
+  // Bot deterrent: a hidden field no human ever fills in (see
+  // lib/validation.ts). Respond exactly like a real submission - a bot that
+  // sees an error or a different response shape learns to stop sending the
+  // field, defeating the point - but never write anything to the database.
+  if (honeypot) {
+    return res.status(201).json({
+      report: {
+        id: "00000000-0000-0000-0000-000000000000",
+        latitude,
+        longitude,
+        activityType,
+        description: description ?? null,
+        corroborations: 1,
+        flaggedCount: 0,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + TTL_MINUTES * 60 * 1000).toISOString(),
+      },
+      corroborated: false,
+    });
+  }
 
   const ip = req.ip ?? "unknown";
   const ua = req.get("user-agent") ?? "unknown";
@@ -90,7 +123,7 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
       where: { id: existing.id },
       data: { corroborations: { increment: 1 } },
     });
-    return res.status(200).json({ report: updated, corroborated: true });
+    return res.status(200).json({ report: toPublicReport(updated), corroborated: true });
   }
 
   const created = await prisma.activityReport.create({
@@ -104,7 +137,7 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
     },
   });
 
-  res.status(201).json({ report: created, corroborated: false });
+  res.status(201).json({ report: toPublicReport(created), corroborated: false });
 });
 
 // POST /api/reports/:id/flag - anonymous "this looks wrong" flag. A report
@@ -112,7 +145,11 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
 // review, rather than deleted (so it isn't gone before anyone can look at
 // why it got flagged). See docs/MODERATION.md.
 reportsRouter.post("/:id/flag", flagRateLimit, async (req, res) => {
-  const { id } = req.params;
+  const parsedParams = reportIdParamSchema.safeParse(req.params);
+  if (!parsedParams.success) {
+    return res.status(400).json({ error: "Invalid report id" });
+  }
+  const { id } = parsedParams.data;
 
   const existing = await prisma.activityReport.findUnique({ where: { id } });
   if (!existing) {
@@ -125,7 +162,7 @@ reportsRouter.post("/:id/flag", flagRateLimit, async (req, res) => {
   });
 
   res.json({
-    report: updated,
+    report: toPublicReport(updated),
     hidden: updated.flaggedCount >= FLAG_THRESHOLD,
   });
 });

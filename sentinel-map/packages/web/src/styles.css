@@ -88,6 +88,17 @@ html, body, #root {
   border: 1px solid #ccc;
 }
 
+/* Bot honeypot field - visually hidden without display:none/visibility:hidden,
+   since some scripts skip those specifically. A sighted user tabbing through
+   the form also skips it (tabIndex={-1} in ReportForm.tsx). */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .report-form-actions {
   display: flex;
   justify-content: flex-end;

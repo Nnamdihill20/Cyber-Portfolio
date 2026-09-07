@@ -17,7 +17,10 @@ why that line is drawn and kept.
 | **C — Facilities** | Police/sheriff stations, ICE field offices, detention facilities, immigration courts, CBP offices | Bulk import from public government directories (ICE locator, EOIR, TRAC, OSM) |
 
 See [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) for exact sourcing per
-layer, and [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design.
+layer, [`docs/MODERATION.md`](docs/MODERATION.md) for anti-abuse design, and
+[`docs/SECURITY.md`](docs/SECURITY.md) for the application security posture
+(what's hardened, what's mitigated, and what's intentionally not built
+given this app has no accounts or sessions).
 
 Alongside the map: a **know-your-rights** panel (state + language selector)
 and a **legal aid directory** (nearest-first, plus statewide/national

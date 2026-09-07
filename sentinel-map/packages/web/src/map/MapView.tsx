@@ -126,24 +126,41 @@ export function MapView({
         },
       });
 
-      for (const [layerId, popupBuilder] of [
-        ["cameras-layer", (p: any) => `<b>ALPR camera</b><br/>Vendor: ${p.vendor}<br/>Confidence: ${p.confidence}`],
-        ["facilities-layer", (p: any) => `<b>${p.name}</b><br/>${p.type}`],
-      ] as const) {
-        map.on("click", layerId, (e) => {
-          const feature = e.features?.[0];
-          if (!feature) return;
-          new Popup()
-            .setLngLat((feature.geometry as any).coordinates)
-            .setHTML(popupBuilder(feature.properties))
-            .addTo(map);
-        });
-        map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
-        map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
+      // Every popup below is built as real DOM nodes with .textContent, never
+      // innerHTML/setHTML with interpolated values. facility name and camera
+      // vendor/confidence come from our own imports today, but report
+      // description is free text a member of the public typed in - treating
+      // all three the same way means a future change to what's shown (or to
+      // where the data comes from) can't quietly reopen a stored-XSS hole by
+      // routing untrusted text through a template string into HTML.
+      function line(parent: HTMLElement, text: string, tag: "b" | "div" = "div") {
+        const el = document.createElement(tag);
+        el.textContent = text;
+        parent.appendChild(el);
+        return el;
       }
 
-      // Reports get a DOM (not HTML-string) popup so the flag button can
-      // carry a real click handler instead of inline JS.
+      map.on("click", "cameras-layer", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const p = feature.properties as any;
+        const el = document.createElement("div");
+        line(el, "ALPR camera", "b");
+        line(el, `Vendor: ${p.vendor}`);
+        line(el, `Confidence: ${p.confidence}`);
+        new Popup().setLngLat((feature.geometry as any).coordinates).setDOMContent(el).addTo(map);
+      });
+
+      map.on("click", "facilities-layer", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const p = feature.properties as any;
+        const el = document.createElement("div");
+        line(el, p.name, "b");
+        line(el, p.type);
+        new Popup().setLngLat((feature.geometry as any).coordinates).setDOMContent(el).addTo(map);
+      });
+
       map.on("click", "reports-layer", (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -151,11 +168,10 @@ export function MapView({
 
         const el = document.createElement("div");
         el.className = "report-popup";
-        el.innerHTML = `
-          <b>${p.activityType}</b><br/>
-          Corroborations: ${p.corroborations}<br/>
-          ${p.description ?? ""}
-        `;
+        line(el, p.activityType, "b");
+        line(el, `Corroborations: ${p.corroborations}`);
+        if (p.description) line(el, p.description);
+
         const flagBtn = document.createElement("button");
         flagBtn.className = "flag-button";
         flagBtn.textContent = "Flag as inaccurate";
@@ -168,8 +184,11 @@ export function MapView({
 
         new Popup().setLngLat((feature.geometry as any).coordinates).setDOMContent(el).addTo(map);
       });
-      map.on("mouseenter", "reports-layer", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "reports-layer", () => (map.getCanvas().style.cursor = ""));
+
+      for (const layerId of ["cameras-layer", "facilities-layer", "reports-layer"]) {
+        map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
+        map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
+      }
     });
 
     return () => {

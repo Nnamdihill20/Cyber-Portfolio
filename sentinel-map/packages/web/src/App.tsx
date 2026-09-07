@@ -61,7 +61,11 @@ export default function App() {
     }
   };
 
-  const handleReportSubmit = async (activityType: string, description: string) => {
+  const handleReportSubmit = async (
+    activityType: string,
+    description: string,
+    honeypot: string
+  ) => {
     if (!pendingReportAt) return;
     try {
       await submitReport({
@@ -69,6 +73,7 @@ export default function App() {
         longitude: pendingReportAt.lon,
         activityType,
         description: description || undefined,
+        honeypot: honeypot || undefined,
       });
       setPendingReportAt(null);
       refresh();

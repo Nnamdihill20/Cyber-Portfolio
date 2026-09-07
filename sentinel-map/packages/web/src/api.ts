@@ -80,6 +80,7 @@ export async function submitReport(input: {
   longitude: number;
   activityType: string;
   description?: string;
+  honeypot?: string;
 }) {
   const res = await fetch(`${BASE}/reports`, {
     method: "POST",
