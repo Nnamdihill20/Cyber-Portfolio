@@ -1,0 +1,865 @@
+/* ---- Design tokens ---------------------------------------------------- */
+
+:root {
+  /* Spacing scale (4px base) - every margin/padding/gap in this file uses
+     one of these instead of an ad hoc pixel value. Previously the same
+     kind of gap (e.g. form-field spacing) used 12px in one form and 14px
+     in another, and button padding had four different values across the
+     app with no reason for the difference - this scale is what those got
+     normalized onto. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-base: 13px;
+  --font-md: 14px;
+  --font-lg: 16px;
+  --font-xl: 18px;
+  --font-2xl: 20px;
+
+  /* Two button sizes app-wide instead of four ad hoc paddings. */
+  --btn-padding: var(--space-2) var(--space-4);
+  --btn-padding-sm: 6px var(--space-3);
+
+  /* Color tokens - light theme (default) */
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7fafc;
+  --color-text: #1a202c;
+  --color-text-secondary: #595959; /* was #777 - see the contrast note further down */
+  --color-text-muted: #888888;
+  --color-border: #cccccc;
+  --color-border-subtle: #e5e9ee;
+  --color-primary: #2b6cb0;
+  --color-primary-surface: #ebf4ff;
+  --color-danger: #c53030;
+  --color-danger-surface: #fed7d7;
+  --color-danger-surface-subtle: #fff5f5;
+  --color-success: #2f855a;
+  --color-shadow: rgba(0, 0, 0, 0.15);
+  --color-backdrop: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark theme: applied automatically when the OS prefers dark and the user
+   hasn't explicitly forced light (see src/lib/theme.ts), and unconditionally
+   when the user has explicitly forced dark. Every token above gets
+   redefined here - component rules below never hardcode a color, so this
+   block is the only place dark mode's palette lives. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #14171c;
+    --color-surface: #1e222a;
+    --color-surface-alt: #262b34;
+    --color-text: #e8eaed;
+    --color-text-secondary: #a0aec0;
+    --color-text-muted: #8792a2;
+    --color-border: #3a4150;
+    --color-border-subtle: #2a2f3a;
+    --color-primary: #63b3ed;
+    --color-primary-surface: #1e3a5f;
+    --color-danger: #fc8181;
+    --color-danger-surface: #4a2222;
+    --color-danger-surface-subtle: #2a1a1a;
+    --color-success: #68d391;
+    --color-shadow: rgba(0, 0, 0, 0.5);
+    --color-backdrop: rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #14171c;
+  --color-surface: #1e222a;
+  --color-surface-alt: #262b34;
+  --color-text: #e8eaed;
+  --color-text-secondary: #a0aec0;
+  --color-text-muted: #8792a2;
+  --color-border: #3a4150;
+  --color-border-subtle: #2a2f3a;
+  --color-primary: #63b3ed;
+  --color-primary-surface: #1e3a5f;
+  --color-danger: #fc8181;
+  --color-danger-surface: #4a2222;
+  --color-danger-surface-subtle: #2a1a1a;
+  --color-success: #68d391;
+  --color-shadow: rgba(0, 0, 0, 0.5);
+  --color-backdrop: rgba(0, 0, 0, 0.6);
+}
+
+/* ---- Base -------------------------------------------------------------- */
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.theme-toggle {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  font-size: var(--font-lg);
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---- Sidebar ------------------------------------------------------------ */
+
+.sidebar {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 10;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  width: 260px;
+  box-shadow: 0 2px 10px var(--color-shadow);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.sidebar h1 {
+  font-size: var(--font-xl);
+  margin: 0 0 2px;
+}
+
+.subtitle {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-4);
+}
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-md);
+  padding: var(--space-1) 0;
+}
+
+.radius-control {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-base);
+}
+
+.radius-control input[type="range"] {
+  width: 100%;
+}
+
+.hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-3);
+}
+
+.resources-button {
+  margin-top: var(--space-3);
+  width: 100%;
+  padding: var(--btn-padding);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: var(--font-base);
+  cursor: pointer;
+}
+
+.resources-button:hover {
+  background: var(--color-primary-surface);
+}
+
+.sidebar-footer-links {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.sidebar-footer-links a {
+  color: var(--color-text-muted);
+}
+
+/* ---- Report form --------------------------------------------------------- */
+
+.report-form-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.report-form {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.report-form label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-base);
+}
+
+.report-form select,
+.report-form textarea {
+  font-size: var(--font-md);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.char-count {
+  align-self: flex-end;
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+/* Bot honeypot field - visually hidden without display:none/visibility:hidden,
+   since some scripts skip those specifically. A sighted user tabbing through
+   the form also skips it (tabIndex={-1} in ReportForm.tsx). */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.report-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.report-form-actions button,
+.admin-login-form button.primary,
+.admin-header-actions button:not(.theme-toggle),
+.basemap-toggle {
+  padding: var(--btn-padding);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-base);
+  cursor: pointer;
+}
+
+.report-form-actions button.primary,
+.admin-login-form button.primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.report-form-actions button:disabled,
+.admin-login-form button.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---- Resources panel (know-your-rights / legal aid) ---------------------- */
+
+.resources-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.resources-panel {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  width: 420px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resources-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-2) var(--space-3);
+}
+
+.resources-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.resources-tabs .tab {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--font-base);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.resources-tabs .tab.active {
+  background: var(--color-primary-surface);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.close-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--font-lg);
+  color: var(--color-text-muted);
+}
+
+.resources-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.resources-body h3 {
+  margin-top: 0;
+}
+
+.rights-controls {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.rights-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-sm);
+}
+
+.rights-controls select,
+.admin-login-form input {
+  font-size: var(--font-md);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.rights-intro {
+  font-size: var(--font-base);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.rights-bullets {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rights-bullets li {
+  font-size: var(--font-base);
+  line-height: 1.5;
+}
+
+.legal-aid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.legal-aid-list li {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.legal-aid-list .tag {
+  margin-left: var(--space-2);
+  font-size: var(--font-xs);
+  background: var(--color-primary-surface);
+  color: var(--color-primary);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+}
+
+.legal-aid-details {
+  margin-top: var(--space-2);
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Rendered inside a MapLibre popup (see MapView.tsx) - kept self-contained
+   since it lives outside our component tree; MapLibre's own popup chrome
+   (background/text color) doesn't follow our theme tokens, only this
+   button does. */
+.report-popup .flag-button {
+  margin-top: var(--space-2);
+  font-size: var(--font-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: 4px;
+  border: 1px solid var(--color-danger);
+  background: white;
+  color: var(--color-danger);
+  cursor: pointer;
+}
+
+.report-popup .flag-button:disabled {
+  color: #999;
+  border-color: #ccc;
+  cursor: default;
+}
+
+/* ---- Admin / moderation UI ------------------------------------------------ */
+
+.admin-login-page {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+}
+
+.admin-login-form {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: 0 2px 10px var(--color-shadow);
+}
+
+.admin-login-form h1 {
+  font-size: var(--font-xl);
+  margin: 0 0 var(--space-1);
+}
+
+.admin-login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-base);
+}
+
+.admin-error {
+  color: var(--color-danger);
+  font-size: var(--font-base);
+  margin: 0;
+}
+
+.admin-dashboard {
+  padding: var(--space-6);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: var(--color-text);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.admin-header h1 {
+  font-size: var(--font-2xl);
+  margin: 0;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-base);
+}
+
+.admin-username {
+  color: var(--color-text-secondary);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-base);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: top;
+}
+
+.admin-table th {
+  background: var(--color-surface-alt);
+  font-weight: 600;
+}
+
+.admin-table tr.hidden-row {
+  background: var(--color-danger-surface-subtle);
+}
+
+.admin-description-cell {
+  max-width: 260px;
+  white-space: pre-line;
+}
+
+.flag-count {
+  font-weight: 700;
+  color: var(--color-danger);
+}
+
+.hidden-tag {
+  margin-left: var(--space-2);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.admin-actions-cell {
+  display: flex;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.admin-actions-cell button {
+  padding: var(--btn-padding-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--font-sm);
+}
+
+.admin-actions-cell button.danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.admin-actions-cell button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Lets a wide table scroll horizontally on a narrow screen instead of
+   forcing the whole page wider than the viewport. */
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
+/* ---- Toast --------------------------------------------------------------- */
+
+.toast {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-md);
+  color: white;
+  box-shadow: 0 2px 10px var(--color-shadow);
+  animation: toast-in 0.15s ease-out;
+}
+
+.toast-success {
+  background: var(--color-success);
+}
+
+.toast-error {
+  background: var(--color-danger);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---- Basemap toggle -------------------------------------------------------- */
+
+.basemap-toggle {
+  position: absolute;
+  bottom: var(--space-6);
+  right: var(--space-3);
+  z-index: 5;
+  box-shadow: 0 1px 4px var(--color-shadow);
+}
+
+.basemap-toggle:hover,
+.report-form-actions button:hover,
+.admin-header-actions button:hover,
+.admin-actions-cell button:hover,
+.resources-tabs .tab:hover {
+  background: var(--color-surface-alt);
+}
+
+/* ---- Legal pages (Privacy/Terms) and the 404 fallback --------------------- */
+
+.legal-page {
+  min-height: 100%;
+  background: var(--color-bg);
+  padding: var(--space-8) var(--space-4);
+  box-sizing: border-box;
+}
+
+.legal-page-content {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: 0 2px 10px var(--color-shadow);
+  line-height: 1.6;
+}
+
+.legal-page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.legal-back-link {
+  color: var(--color-primary);
+  font-size: var(--font-base);
+}
+
+.legal-page-content h1 {
+  margin-top: 0;
+}
+
+.legal-page-content h2 {
+  font-size: var(--font-lg);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-2);
+}
+
+.legal-updated {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Consent gate (disclaimer shown before the map loads) ---------------- */
+
+.consent-gate {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--color-bg);
+  padding: var(--space-8) var(--space-4);
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.consent-gate-card {
+  max-width: 560px;
+  width: 100%;
+  margin: auto;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: 0 2px 10px var(--color-shadow);
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.consent-gate-topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.consent-gate-card h1 {
+  margin-top: 0;
+  margin-bottom: var(--space-6);
+  font-size: var(--font-2xl);
+}
+
+.consent-gate-point {
+  margin-bottom: var(--space-5);
+}
+
+.consent-gate-point h2 {
+  font-size: var(--font-lg);
+  margin: 0 0 var(--space-1);
+}
+
+.consent-gate-point p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.consent-gate-links {
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.consent-gate-links a {
+  color: var(--color-primary);
+}
+
+.consent-gate-button {
+  width: 100%;
+  padding: var(--btn-padding);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  font-size: var(--font-md);
+  cursor: pointer;
+}
+
+.not-found-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.not-found-page a {
+  color: var(--color-primary);
+}
+
+/* ---- Mobile ---------------------------------------------------------------
+   The sidebar/forms/panels above are all sized for desktop by default.
+   Below this width, a fixed 260-420px panel either eats most of the screen
+   or overflows it outright - this is a real usage path for this app
+   specifically (checking the map from a phone in the field), not an edge
+   case to skip. */
+@media (max-width: 640px) {
+  .sidebar {
+    left: var(--space-2);
+    right: var(--space-2);
+    top: var(--space-2);
+    width: auto;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    padding: var(--space-3);
+  }
+
+  .report-form,
+  .admin-login-form {
+    width: min(320px, 88vw);
+  }
+
+  .resources-panel {
+    width: min(420px, 92vw);
+    max-height: 85vh;
+  }
+
+  .rights-controls {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .basemap-toggle {
+    bottom: var(--space-3);
+    right: var(--space-2);
+    padding: var(--btn-padding-sm);
+    font-size: var(--font-sm);
+  }
+
+  .toast {
+    width: min(320px, 90vw);
+    text-align: center;
+    bottom: var(--space-3);
+  }
+
+  .admin-dashboard {
+    padding: var(--space-3);
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .legal-page-content {
+    padding: var(--space-5);
+  }
+
+  .consent-gate-card {
+    padding: var(--space-5);
+  }
+}

@@ -1,0 +1,202 @@
+// Sentinel Map data model.
+//
+// Deliberate constraint (see /docs/LEGAL.md): no model describing map data
+// may carry a field that identifies a specific individual. Every map-data
+// model here describes a place (AlprCamera, Facility) or an anonymous,
+// decaying event (ActivityReport) - never a person being tracked by the app.
+// AdminUser below is a different category entirely: it's an account for
+// someone *operating* this app's moderation queue, not a person the app
+// surfaces on the map - the same distinction as staff credentials for any
+// admin panel.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---- Layer A: ALPR cameras ------------------------------------------------
+
+enum AlprVendor {
+  FLOCK
+  MOTOROLA_VIGILANT
+  GENETEC
+  REKOR
+  NEOLOGY
+  ELSAG
+  JENOPTIK
+  COBAN
+  OTHER
+  UNKNOWN
+}
+
+enum MountType {
+  FIXED_POLE
+  MOBILE_PATROL
+  TRAILER
+  TOLL_GANTRY
+  BUSINESS_OWNED
+}
+
+enum OwnerType {
+  POLICE_DEPT
+  HOA
+  PRIVATE_BUSINESS
+  TOLL_AUTHORITY
+  UNKNOWN
+}
+
+enum Confidence {
+  VERIFIED
+  COMMUNITY_REPORTED
+  UNVERIFIED
+}
+
+model AlprCamera {
+  id                  String     @id @default(uuid())
+  latitude            Float
+  longitude           Float
+  vendor              AlprVendor @default(UNKNOWN)
+  mountType           MountType?
+  ownerType           OwnerType?
+  ownerName           String?
+  networkAffiliation  String? // e.g. which data-sharing network this feeds
+  source              String // e.g. "deflock", "eff_atlas", "community_submission"
+  sourceDataset       String?
+  confidence          Confidence @default(UNVERIFIED)
+  evidencePhotoUrl    String?
+  notes               String?
+  firstReportedAt     DateTime   @default(now())
+  lastVerifiedAt      DateTime?
+
+  @@index([latitude, longitude])
+}
+
+// ---- Layer C: Enforcement / government facilities -------------------------
+
+enum FacilityType {
+  POLICE_STATION
+  SHERIFF_OFFICE
+  ICE_FIELD_OFFICE
+  ICE_DETENTION_FACILITY
+  CBP_OFFICE
+  IMMIGRATION_COURT
+  COURTHOUSE
+  DHS_OFFICE
+  NATIONAL_GUARD_ARMORY
+}
+
+enum Jurisdiction {
+  FEDERAL
+  STATE
+  COUNTY
+  MUNICIPAL
+}
+
+model Facility {
+  id             String       @id @default(uuid())
+  latitude       Float
+  longitude      Float
+  name           String
+  type           FacilityType
+  jurisdiction   Jurisdiction
+  address        String?
+  phone          String?
+  source         String // e.g. "ice_gov_locator", "eoir_court_locator", "osm"
+  operatingHours String?
+  notes          String?
+  lastVerifiedAt DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([latitude, longitude])
+  @@index([type])
+}
+
+// ---- Layer B: Anonymous, decaying activity reports -------------------------
+
+enum ActivityType {
+  CHECKPOINT
+  PATROL_PRESENCE
+  RAID_REPORTED
+  OTHER
+}
+
+model ActivityReport {
+  id             String       @id @default(uuid())
+  latitude       Float
+  longitude      Float
+  activityType   ActivityType
+  description    String?
+  corroborations Int          @default(1)
+  // Salted hash of IP+UA - used only for rate limiting & duplicate
+  // corroboration detection. Never the raw IP. See src/lib/geo.ts.
+  reporterHash   String
+  flaggedCount   Int          @default(0)
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+
+  @@index([latitude, longitude])
+  @@index([expiresAt])
+}
+
+// ---- Support resources: legal aid + know-your-rights content ---------------
+// Not a map layer of surveillance/enforcement - these are resources *for* the
+// person using the app, surfaced alongside the map.
+
+model LegalAidOrg {
+  id         String   @id @default(uuid())
+  name       String
+  // Null lat/lon means a statewide or national hotline - it has no single
+  // physical point, so it's returned by every nearby-search regardless of
+  // distance rather than being geo-filtered out. See routes/legalAid.ts.
+  latitude   Float?
+  longitude  Float?
+  phone      String?
+  website    String?
+  languages  String[] // e.g. ["en", "es"]
+  specialty  String? // e.g. "immigration", "criminal_defense", "general"
+  hours      String?
+  notes      String?
+  source     String
+  createdAt  DateTime @default(now())
+
+  @@index([latitude, longitude])
+}
+
+// General, jurisdiction-agnostic "know your rights" content, not
+// jurisdiction-specific legal advice. Keyed by state so a state with no
+// entry of its own falls back to "FEDERAL" (general constitutional rights
+// that apply everywhere in the US). See seed/seed-know-your-rights.ts.
+model KnowYourRightsContent {
+  id        String   @id @default(uuid())
+  state     String // two-letter state code, or "FEDERAL"
+  language  String   @default("en")
+  title     String
+  // JSON-encoded { intro: string, bullets: string[] } - deliberately NOT a
+  // flat prose string. An earlier version stored formatted prose here and
+  // stray line breaks from how the seed file's source happened to be
+  // wrapped leaked into the rendered UI as ragged spacing. Structuring each
+  // bullet as its own array element makes that class of bug impossible -
+  // see routes/knowYourRights.ts (parses this before responding) and
+  // seed/seed-know-your-rights.ts.
+  body      String
+  updatedAt DateTime @updatedAt
+
+  @@unique([state, language])
+}
+
+// ---- Admin / moderation --------------------------------------------------
+
+// A moderator account for the flagged-reports review UI (see
+// routes/adminAuth.ts, routes/adminReports.ts). Provisioned only via the
+// `create-admin` CLI script - there is deliberately no public signup
+// endpoint. See docs/SECURITY.md for the auth design.
+model AdminUser {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

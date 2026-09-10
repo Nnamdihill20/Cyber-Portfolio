@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentinel Map</title>
+    <meta
+      name="description"
+      content="A community transparency map of public ALPR cameras and enforcement facilities, plus anonymous, decaying reports of enforcement activity nearby."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph / social preview. og-image.svg is a placeholder - export
+         it to a 1200x630 PNG before relying on this for Facebook/LinkedIn
+         previews specifically; SVG og:image support is inconsistent across
+         platforms (Twitter/X and Discord handle it fine, Facebook/LinkedIn
+         often don't render it). See docs/SITE_POLISH.md. -->
+    <meta property="og:title" content="Sentinel Map" />
+    <meta
+      property="og:description"
+      content="Public ALPR cameras, enforcement facilities, and anonymous activity reports on one map."
+    />
+    <meta property="og:image" content="/og-image.svg" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

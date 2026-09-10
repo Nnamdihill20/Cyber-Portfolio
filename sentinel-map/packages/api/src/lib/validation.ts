@@ -1,0 +1,85 @@
+import { z } from "zod";
+
+export const nearbyQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce.number().min(0.1).max(100).default(5),
+});
+
+// Every field a client may legitimately send is listed explicitly, and
+// .strict() rejects the request outright if it includes anything else
+// (e.g. a client trying to set flaggedCount, corroborations, or
+// reporterHash directly) instead of silently dropping the extra field -
+// that makes tampering attempts visible as 400s rather than invisible.
+//
+// `honeypot` is a basic bot deterrent: the web form renders it hidden via
+// CSS, so a human never fills it in, but a bot that blindly fills every
+// field it finds will. See routes/reports.ts and routes/cameras.ts for how
+// it's handled (a fake success, not an error - see the comment there for
+// why).
+export const createReportSchema = z
+  .object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    activityType: z.enum([
+      "CHECKPOINT",
+      "PATROL_PRESENCE",
+      "RAID_REPORTED",
+      "OTHER",
+    ]),
+    description: z.string().max(280).optional(),
+    honeypot: z.string().max(200).optional(),
+  })
+  .strict();
+
+export const reportIdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const createCameraSchema = z
+  .object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    vendor: z
+      .enum([
+        "FLOCK",
+        "MOTOROLA_VIGILANT",
+        "GENETEC",
+        "REKOR",
+        "NEOLOGY",
+        "ELSAG",
+        "JENOPTIK",
+        "COBAN",
+        "OTHER",
+        "UNKNOWN",
+      ])
+      .default("UNKNOWN"),
+    mountType: z
+      .enum(["FIXED_POLE", "MOBILE_PATROL", "TRAILER", "TOLL_GANTRY", "BUSINESS_OWNED"])
+      .optional(),
+    ownerType: z
+      .enum(["POLICE_DEPT", "HOA", "PRIVATE_BUSINESS", "TOLL_AUTHORITY", "UNKNOWN"])
+      .optional(),
+    ownerName: z.string().max(120).optional(),
+    notes: z.string().max(280).optional(),
+    honeypot: z.string().max(200).optional(),
+  })
+  .strict();
+
+const US_STATE_CODE = /^([A-Z]{2}|FEDERAL)$/;
+
+export const knowYourRightsQuerySchema = z.object({
+  state: z
+    .string()
+    .transform((s) => s.toUpperCase())
+    .refine((s) => US_STATE_CODE.test(s), "state must be a 2-letter code or FEDERAL")
+    .default("FEDERAL"),
+  lang: z.string().min(2).max(5).default("en"),
+});
+
+export const adminLoginSchema = z
+  .object({
+    username: z.string().min(1).max(100),
+    password: z.string().min(1).max(200),
+  })
+  .strict();
