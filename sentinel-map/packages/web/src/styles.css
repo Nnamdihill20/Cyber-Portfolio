@@ -710,6 +710,80 @@ body {
   color: var(--color-text-secondary);
 }
 
+/* ---- Consent gate (disclaimer shown before the map loads) ---------------- */
+
+.consent-gate {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--color-bg);
+  padding: var(--space-8) var(--space-4);
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.consent-gate-card {
+  max-width: 560px;
+  width: 100%;
+  margin: auto;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: 0 2px 10px var(--color-shadow);
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.consent-gate-topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.consent-gate-card h1 {
+  margin-top: 0;
+  margin-bottom: var(--space-6);
+  font-size: var(--font-2xl);
+}
+
+.consent-gate-point {
+  margin-bottom: var(--space-5);
+}
+
+.consent-gate-point h2 {
+  font-size: var(--font-lg);
+  margin: 0 0 var(--space-1);
+}
+
+.consent-gate-point p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.consent-gate-links {
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.consent-gate-links a {
+  color: var(--color-primary);
+}
+
+.consent-gate-button {
+  width: 100%;
+  padding: var(--btn-padding);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  font-size: var(--font-md);
+  cursor: pointer;
+}
+
 .not-found-page {
   height: 100%;
   display: flex;
@@ -782,6 +856,10 @@ body {
   }
 
   .legal-page-content {
+    padding: var(--space-5);
+  }
+
+  .consent-gate-card {
     padding: var(--space-5);
   }
 }

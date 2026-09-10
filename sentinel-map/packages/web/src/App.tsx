@@ -9,10 +9,12 @@ import {
   type ActivityReport,
   type Facility,
 } from "./api";
+import { ConsentGate } from "./components/ConsentGate";
 import { ReportForm } from "./components/ReportForm";
 import { ResourcesPanel } from "./components/ResourcesPanel";
 import { Sidebar } from "./components/Sidebar";
 import { MapView, type MapViewHandle } from "./map/MapView";
+import { hasAcknowledged, setAcknowledged } from "./lib/consent";
 
 // Fallback only - used until geolocation resolves (or if it's denied/
 // unavailable), never the app's steady-state location. See the geolocation
@@ -20,6 +22,8 @@ import { MapView, type MapViewHandle } from "./map/MapView";
 const DEFAULT_CENTER: [number, number] = [-87.6298, 41.8781];
 
 export default function App() {
+  // Lazy initializer - reads localStorage once, not on every render.
+  const [acknowledged, setAcknowledgedState] = useState(hasAcknowledged);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_CENTER);
   const [radiusKm, setRadiusKm] = useState(5); // real value arrives within one frame, from MapView's initial viewport report
   const [visibleLayers, setVisibleLayers] = useState({
@@ -48,9 +52,12 @@ export default function App() {
   // Center the map on the visitor's real location as soon as the browser
   // will give it up. Falls back to DEFAULT_CENTER silently on denial/
   // timeout/unsupported browsers - there's no good UI for "we don't know
-  // where you are," so the map just stays where it started.
+  // where you are," so the map just stays where it started. Gated on
+  // acknowledged: nothing about the app's real behavior - not even the
+  // location permission prompt - should start before the user has agreed
+  // to the disclaimer.
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!acknowledged || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -59,7 +66,7 @@ export default function App() {
       (err) => console.warn("Geolocation unavailable - staying at the default location:", err.message),
       { timeout: 8000 }
     );
-  }, []);
+  }, [acknowledged]);
 
   const refresh = useCallback(() => {
     const [lon, lat] = center;
@@ -69,10 +76,11 @@ export default function App() {
   }, [center, radiusKm]);
 
   useEffect(() => {
+    if (!acknowledged) return;
     refresh();
     const interval = setInterval(refresh, 60_000); // reports decay - keep the view fresh
     return () => clearInterval(interval);
-  }, [refresh]);
+  }, [acknowledged, refresh]);
 
   const handleToggle = (layer: "cameras" | "facilities" | "reports") => {
     setVisibleLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
@@ -115,6 +123,17 @@ export default function App() {
       showToast("Failed to submit report - see console for details", "error");
     }
   };
+
+  if (!acknowledged) {
+    return (
+      <ConsentGate
+        onAcknowledge={() => {
+          setAcknowledged();
+          setAcknowledgedState(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
