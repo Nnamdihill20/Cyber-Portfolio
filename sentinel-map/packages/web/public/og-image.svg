@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2b6cb0"/>
+      <stop offset="100%" stop-color="#1a365d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <path d="M180 200c-46 0-83 35-83 79 0 60 83 116 83 116s83-56 83-116c0-44-37-79-83-79z" fill="#ffffff" opacity="0.15"/>
+  <path d="M1020 380c-33 0-60 25-60 57 0 43 60 84 60 84s60-41 60-84c0-32-27-57-60-57z" fill="#ffffff" opacity="0.15"/>
+  <text x="80" y="300" font-family="-apple-system, Segoe UI, sans-serif" font-size="72" font-weight="700" fill="#ffffff">Sentinel Map</text>
+  <text x="80" y="360" font-family="-apple-system, Segoe UI, sans-serif" font-size="30" fill="#e2e8f0">Public infrastructure &amp; anonymous activity reports</text>
+</svg>

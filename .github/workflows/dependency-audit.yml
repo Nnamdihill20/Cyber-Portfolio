@@ -1,0 +1,39 @@
+name: Dependency audit (sentinel-map)
+
+on:
+  pull_request:
+    paths:
+      - "sentinel-map/packages/api/package*.json"
+      - "sentinel-map/packages/web/package*.json"
+  schedule:
+    # Weekly, independent of any PR - catches newly-disclosed advisories
+    # against dependencies nobody touched. See sentinel-map/docs/SECURITY.md.
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [api, web]
+    defaults:
+      run:
+        working-directory: sentinel-map/packages/${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - name: npm audit (high and critical)
+        # web has one known, documented, dev-server-only finding (vite/esbuild)
+        # with no non-breaking fix yet - see sentinel-map/docs/SECURITY.md for
+        # why it's accepted rather than forced. continue-on-error keeps this
+        # check informative (still runs, still visible in the Actions UI)
+        # without permanently blocking merges on a known issue; it does mean a
+        # *new* high/critical finding in web wouldn't fail the build either,
+        # so re-check this job's output on every PR, don't just trust green.
+        # api has no such exception - any finding there fails the build.
+        continue-on-error: ${{ matrix.package == 'web' }}
+        run: npm audit --audit-level=high

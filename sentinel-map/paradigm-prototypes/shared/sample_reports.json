@@ -1,0 +1,15 @@
+[
+  { "id": 1,  "activityType": "CHECKPOINT",       "lat": 41.87810, "lon": -87.62980, "reportedAt": "2026-11-09T08:00:00Z" },
+  { "id": 2,  "activityType": "CHECKPOINT",       "lat": 41.87820, "lon": -87.62970, "reportedAt": "2026-11-09T08:02:00Z" },
+  { "id": 3,  "activityType": "CHECKPOINT",       "lat": 41.87800, "lon": -87.62990, "reportedAt": "2026-11-09T08:05:00Z" },
+  { "id": 10, "activityType": "CHECKPOINT",       "lat": 41.87815, "lon": -87.62975, "reportedAt": "2026-11-09T08:07:00Z" },
+
+  { "id": 4,  "activityType": "PATROL_PRESENCE",  "lat": 41.88200, "lon": -87.63500, "reportedAt": "2026-11-09T08:10:00Z" },
+  { "id": 5,  "activityType": "RAID_REPORTED",    "lat": 41.88210, "lon": -87.63510, "reportedAt": "2026-11-09T08:11:00Z" },
+  { "id": 9,  "activityType": "PATROL_PRESENCE",  "lat": 41.87850, "lon": -87.63010, "reportedAt": "2026-11-09T08:12:00Z" },
+
+  { "id": 6,  "activityType": "OTHER",            "lat": 41.90000, "lon": -87.65000, "reportedAt": "2026-11-09T08:15:00Z" },
+  { "id": 7,  "activityType": "OTHER",            "lat": 41.90005, "lon": -87.64995, "reportedAt": "2026-11-09T08:16:00Z" },
+
+  { "id": 8,  "activityType": "CHECKPOINT",       "lat": 42.00000, "lon": -87.90000, "reportedAt": "2026-11-09T08:20:00Z" }
+]

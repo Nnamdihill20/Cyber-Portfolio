@@ -1,0 +1,2 @@
+name,latitude,longitude,jurisdiction,address,phone,operating_hours,notes
+PLACEHOLDER - Example Immigration Court (replace with real data from justice.gov/eoir),0,0,FEDERAL,"Not a real address - see docs/DATA_SOURCES.md",,,This row is a placeholder to show the expected column shape. Do not treat as real.

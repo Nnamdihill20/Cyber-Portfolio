@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Replace https://example.com with your real deployed domain before this
+  is useful - a sitemap pointing at a placeholder domain doesn't help
+  search engines. /admin, /privacy, and /terms are deliberately omitted:
+  /admin per robots.txt (a moderation login has nothing to index), and
+  privacy/terms are secondary pages a crawler will find via the footer
+  link rather than needing a direct sitemap entry.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

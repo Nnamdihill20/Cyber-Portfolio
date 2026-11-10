@@ -1,0 +1,6 @@
+# /admin is a login-gated moderation dashboard - nothing there is useful to
+# index, and there's no reason to advertise its existence to crawlers.
+User-agent: *
+Disallow: /admin
+
+Sitemap: /sitemap.xml
