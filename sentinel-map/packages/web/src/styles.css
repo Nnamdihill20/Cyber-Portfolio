@@ -578,6 +578,18 @@ body {
   color: var(--color-danger);
 }
 
+.guardian-tag {
+  margin-left: var(--space-2);
+  background: var(--color-primary-surface);
+  color: var(--color-primary);
+}
+
+.guardian-reason {
+  margin-top: var(--space-1);
+  font-size: var(--font-xs);
+  color: var(--color-primary);
+}
+
 .admin-actions-cell {
   display: flex;
   gap: var(--space-2);

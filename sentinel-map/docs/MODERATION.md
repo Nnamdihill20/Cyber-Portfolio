@@ -25,6 +25,13 @@ this file is specifically about abuse of the anonymous-submission model.
   existing, unexpired report of the same `activityType` increments
   `corroborations` on the existing row instead of creating a new pin —
   this both reduces spam surface area and gives users a confidence signal.
+- **Guardian (automated content screening).** Every new report's
+  description is screened at submission time by `src/lib/guardian.ts`
+  before anything reaches public results — see `docs/GUARDIAN.md`. A
+  flagged report starts life already at `REPORT_FLAG_THRESHOLD`, so a
+  human moderator sees it before anyone else can, not after. Guardian only
+  ever recommends a flag; Restore/Purge below are still the only things
+  that actually change what's visible.
 - **Community flagging.** `POST /api/reports/:id/flag` lets any viewer flag a
   report as inaccurate (button in the map popup). A report hitting
   `REPORT_FLAG_THRESHOLD` (default 3) flags is excluded from `GET .../nearby`

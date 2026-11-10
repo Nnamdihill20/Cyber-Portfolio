@@ -163,12 +163,16 @@ function Dashboard({ username, onLoggedOut }: { username: string; onLoggedOut: (
           {reports.map((r) => (
             <tr key={r.id} className={r.flaggedCount >= 3 ? "hidden-row" : undefined}>
               <td>{r.activityType}</td>
-              <td className="admin-description-cell">{r.description || <em>none</em>}</td>
+              <td className="admin-description-cell">
+                {r.description || <em>none</em>}
+                {r.guardianFlagged && <div className="guardian-reason">🛡 {r.guardianReason}</div>}
+              </td>
               <td>
                 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
               </td>
               <td>
                 <span className="flag-count">{r.flaggedCount}</span>
+                {r.guardianFlagged && <span className="tag guardian-tag">Guardian</span>}
                 {r.flaggedCount >= 3 && <span className="tag hidden-tag">hidden from public</span>}
               </td>
               <td>{r.corroborations}</td>

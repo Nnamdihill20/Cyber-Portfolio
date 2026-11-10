@@ -135,6 +135,14 @@ model ActivityReport {
   // corroboration detection. Never the raw IP. See src/lib/geo.ts.
   reporterHash   String
   flaggedCount   Int          @default(0)
+  // Set by Guardian (src/lib/guardian.ts), the submission-time content-
+  // safety classifier, as distinct from flaggedCount (which also counts
+  // flags from human viewers via POST /:id/flag). guardianReason is the
+  // human-readable rule that fired - shown in the admin dashboard so a
+  // moderator knows *why* the system flagged it, never a bare boolean.
+  // Never set outside of lib/guardian.ts.
+  guardianFlagged Boolean     @default(false)
+  guardianReason  String?
   createdAt      DateTime     @default(now())
   expiresAt      DateTime
 

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { ActivityReport } from "@prisma/client";
 import { prisma } from "../db";
 import { boundingBox, haversineKm, reporterHash } from "../lib/geo";
+import { classifyDescription } from "../lib/guardian";
 import { createReportSchema, nearbyQuerySchema, reportIdParamSchema } from "../lib/validation";
 import { makeRateLimiter } from "../middleware/rateLimit";
 
@@ -36,10 +37,29 @@ const flagRateLimit = flagLimiter((req) => {
 // needs. Returning it in API responses would hand every viewer a stable,
 // crossable ID that identifies "these reports came from the same device" -
 // directly undermining the anonymity this layer is built around (see
-// docs/LEGAL.md). Every response goes through this before res.json().
+// docs/LEGAL.md). guardianFlagged/guardianReason are stripped for a
+// different reason, same principle as the honeypot response below: a
+// submitter whose report Guardian flagged must see an ordinary success
+// response, not a tell that lets them iteratively reword a violation until
+// it slips past the classifier. Only the admin dashboard (adminReports.ts)
+// shows these two fields. Every public response goes through this before
+// res.json().
 function toPublicReport(report: ActivityReport) {
-  const { reporterHash: _reporterHash, ...publicFields } = report;
+  const { reporterHash: _reporterHash, guardianFlagged: _guardianFlagged, guardianReason: _guardianReason, ...publicFields } = report;
   return publicFields;
+}
+
+// Used only for the response to the submitter's own POST /reports call,
+// never for GET /nearby. A freshly created report cannot honestly have any
+// *community* flags yet - so a non-zero flaggedCount at this exact moment
+// can only mean Guardian just flagged it, which is exactly the tell this
+// function exists to hide (see toPublicReport's comment and the honeypot
+// branch above, which fabricates its own all-zero response for the same
+// reason). The real flaggedCount is still written to the database and is
+// exactly what the admin dashboard sees - only the submitter's own
+// confirmation response is normalized to look like an ordinary success.
+function toSubmitterResponse(report: ActivityReport) {
+  return { ...toPublicReport(report), flaggedCount: 0 };
 }
 
 // GET /api/reports/nearby?lat=&lon=&radiusKm= - only unexpired reports.
@@ -126,6 +146,15 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
     return res.status(200).json({ report: toPublicReport(updated), corroborated: true });
   }
 
+  // Guardian screens the description before anything is written - see
+  // lib/guardian.ts. A flagged report is still created (this layer is
+  // flag-to-hide, not block-on-submit, same as a human flag), but starts
+  // out already at FLAG_THRESHOLD so it never reaches public results
+  // pending a moderator's review, exactly like a report the public has
+  // flagged three times - Guardian just gets there before anyone has to
+  // see it first.
+  const verdict = classifyDescription(description);
+
   const created = await prisma.activityReport.create({
     data: {
       latitude,
@@ -134,10 +163,13 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
       description,
       reporterHash: hash,
       expiresAt: new Date(Date.now() + TTL_MINUTES * 60 * 1000),
+      ...(verdict.flagged
+        ? { flaggedCount: FLAG_THRESHOLD, guardianFlagged: true, guardianReason: verdict.reason }
+        : {}),
     },
   });
 
-  res.status(201).json({ report: toPublicReport(created), corroborated: false });
+  res.status(201).json({ report: toSubmitterResponse(created), corroborated: false });
 });
 
 // POST /api/reports/:id/flag - anonymous "this looks wrong" flag. A report

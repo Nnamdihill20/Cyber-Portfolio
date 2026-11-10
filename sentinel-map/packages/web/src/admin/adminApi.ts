@@ -1,9 +1,15 @@
 import type { ActivityReport } from "../api";
 
-// The public ActivityReport type never carries flaggedCount (see api.ts) -
-// the admin list is the one place that field is meant to be visible.
+// The public ActivityReport type never carries flaggedCount, guardianFlagged,
+// or guardianReason (see api.ts) - the admin list is the one place these are
+// meant to be visible. guardianFlagged/guardianReason are set by Guardian,
+// the submission-time content-safety classifier (see the API's
+// lib/guardian.ts), as distinct from flaggedCount (which also counts flags
+// from human viewers via the public "flag" button).
 export interface FlaggedReport extends ActivityReport {
   flaggedCount: number;
+  guardianFlagged: boolean;
+  guardianReason: string | null;
 }
 
 const BASE = "/api/admin";
