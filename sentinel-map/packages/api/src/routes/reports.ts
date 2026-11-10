@@ -3,6 +3,7 @@ import type { ActivityReport } from "@prisma/client";
 import { prisma } from "../db";
 import { boundingBox, haversineKm, reporterHash } from "../lib/geo";
 import { classifyDescription } from "../lib/guardian";
+import { evaluateAlert } from "../lib/sentinel";
 import { createReportSchema, nearbyQuerySchema, reportIdParamSchema } from "../lib/validation";
 import { makeRateLimiter } from "../middleware/rateLimit";
 
@@ -44,9 +45,21 @@ const flagRateLimit = flagLimiter((req) => {
 // it slips past the classifier. Only the admin dashboard (adminReports.ts)
 // shows these two fields. Every public response goes through this before
 // res.json().
+// Sentinel (see lib/sentinel.ts) only ever sees a count and an elapsed
+// time - never a description, location history, or anything that could
+// identify a person - and only ever labels a pattern; it doesn't hide or
+// change anything. Unlike Guardian's reasoning, there's no reason to hide
+// this from the public: "this looks like a forming pattern" is the whole
+// point of the feature, shown to every viewer.
+function computeAlert(report: Pick<ActivityReport, "corroborations" | "createdAt">) {
+  const minutesSinceFirst = (Date.now() - report.createdAt.getTime()) / 60_000;
+  return evaluateAlert({ corroborations: report.corroborations, minutesSinceFirst });
+}
+
 function toPublicReport(report: ActivityReport) {
   const { reporterHash: _reporterHash, guardianFlagged: _guardianFlagged, guardianReason: _guardianReason, ...publicFields } = report;
-  return publicFields;
+  const alert = computeAlert(report);
+  return { ...publicFields, alertSeverity: alert.severity, alertMessage: alert.message };
 }
 
 // Used only for the response to the submitter's own POST /reports call,
@@ -101,6 +114,10 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
   // lib/validation.ts). Respond exactly like a real submission - a bot that
   // sees an error or a different response shape learns to stop sending the
   // field, defeating the point - but never write anything to the database.
+  // alertSeverity/alertMessage below are hand-matched to what a genuine
+  // brand-new single-corroboration report would actually get from
+  // evaluateAlert() - same reasoning: a bot diffing response shapes must
+  // never be able to tell this one apart from a real success.
   if (honeypot) {
     return res.status(201).json({
       report: {
@@ -111,6 +128,8 @@ reportsRouter.post("/", reportRateLimit, async (req, res) => {
         description: description ?? null,
         corroborations: 1,
         flaggedCount: 0,
+        alertSeverity: "low",
+        alertMessage: "Single, unconfirmed report - no corroboration yet",
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + TTL_MINUTES * 60 * 1000).toISOString(),
       },

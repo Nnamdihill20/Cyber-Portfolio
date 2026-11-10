@@ -2,7 +2,7 @@ import maplibregl, { Map as MLMap, Popup } from "maplibre-gl";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { AlprCamera, ActivityReport, Facility } from "../api";
 import { haversineKm } from "../lib/geo";
-import { ACTIVITY_COLORS, FACILITY_COLORS, VENDOR_COLORS } from "./layerStyles";
+import { ACTIVITY_COLORS, ALERT_SEVERITY_STROKE, FACILITY_COLORS, VENDOR_COLORS } from "./layerStyles";
 
 // Free, no-key-required raster basemaps - no real worldwide detail beyond
 // these needs an API key. Both are meant for light/dev use per their
@@ -238,8 +238,20 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
           ],
           "circle-color": matchExpression("activityType", ACTIVITY_COLORS, "#718096"),
           "circle-opacity": 0.75,
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#ffffff",
+          // Sentinel's alert severity (see layerStyles.ts) renders as the
+          // stroke - width and color both scale with severity, so a
+          // critical cluster is visibly thicker and redder-ringed than a
+          // single unconfirmed report, without changing the fill color
+          // that already encodes activityType.
+          "circle-stroke-width": [
+            "match",
+            ["get", "alertSeverity"],
+            "critical", 3,
+            "high", 2.5,
+            "medium", 2,
+            1,
+          ] as unknown as maplibregl.DataDrivenPropertyValueSpecification<number>,
+          "circle-stroke-color": matchExpression("alertSeverity", ALERT_SEVERITY_STROKE, "#ffffff"),
         },
       });
 
@@ -274,6 +286,13 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
         line(el, p.activityType, "b");
         line(el, `Corroborations: ${p.corroborations}`);
         if (p.description) line(el, p.description);
+        // Sentinel's pattern label - only shown once it's actually
+        // actionable (medium severity or above), so a routine single
+        // report's popup isn't cluttered with a "no notable pattern" line.
+        if (p.alertSeverity && p.alertSeverity !== "info" && p.alertSeverity !== "low") {
+          const alertLine = line(el, `⚠ ${p.alertSeverity.toUpperCase()}: ${p.alertMessage}`);
+          alertLine.className = `report-alert report-alert-${p.alertSeverity}`;
+        }
 
         const flagBtn = document.createElement("button");
         flagBtn.className = "flag-button";

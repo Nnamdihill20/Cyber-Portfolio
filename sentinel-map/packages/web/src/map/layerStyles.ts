@@ -31,3 +31,15 @@ export const ACTIVITY_COLORS: Record<string, string> = {
   RAID_REPORTED: "#c53030",
   OTHER: "#718096",
 };
+
+// Sentinel's alert severity (see the API's lib/sentinel.ts) renders as the
+// report pin's stroke, layered on top of ACTIVITY_COLORS' fill - so a pin
+// stays color-coded by what it is, with severity as a visible ring around
+// it, rather than the two signals competing for the same color channel.
+export const ALERT_SEVERITY_STROKE: Record<string, string> = {
+  info: "#ffffff",
+  low: "#ffffff",
+  medium: "#d69e2e",
+  high: "#dd6b20",
+  critical: "#c53030",
+};

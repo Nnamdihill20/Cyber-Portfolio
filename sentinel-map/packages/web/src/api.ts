@@ -26,6 +26,11 @@ export interface ActivityReport {
   activityType: string;
   description?: string | null;
   corroborations: number;
+  // Set by Sentinel, the threat/anomaly agent (see the API's lib/sentinel.ts) -
+  // a label for the corroboration cluster's count/timing pattern, never
+  // anything about who reported it.
+  alertSeverity: "info" | "low" | "medium" | "high" | "critical";
+  alertMessage: string;
   createdAt: string;
   expiresAt: string;
 }

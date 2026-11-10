@@ -466,6 +466,27 @@ body {
   cursor: default;
 }
 
+/* Sentinel's pattern label (see MapView.tsx) - colors match
+   ALERT_SEVERITY_STROKE in layerStyles.ts, the same severity ring drawn on
+   the pin itself, so the popup text and the pin's stroke agree. */
+.report-alert {
+  margin-top: var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 700;
+}
+
+.report-alert-medium {
+  color: #d69e2e;
+}
+
+.report-alert-high {
+  color: #dd6b20;
+}
+
+.report-alert-critical {
+  color: #c53030;
+}
+
 /* ---- Admin / moderation UI ------------------------------------------------ */
 
 .admin-login-page {
